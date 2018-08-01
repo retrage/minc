@@ -14,7 +14,14 @@ runtest() {
     rm -f tmp.{s,exe}
 }
 
+# step 1
 runtest "0" 0
 runtest "1" 1
 runtest "128" 128
+
+# step 2.1
+runtest "1+1" 2
+runtest "0+0" 0
+runtest "64+32" 96
+
 echo OK
