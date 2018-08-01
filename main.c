@@ -5,6 +5,7 @@
 enum TokenType {
   TNUMBER,
   TPLUS,
+  TMINUS,
   TEOF,
 };
 
@@ -49,6 +50,16 @@ void tokenize(void)
       }
       p->type = TPLUS;
       p++;
+    } else if (c == '-') {
+      if (num_idx > 0) {
+        number[num_idx] = '\0';
+        p->type = TNUMBER;
+        p->int_value = atoi(number);
+        p++;
+        num_idx = 0;
+      }
+      p->type = TMINUS;
+      p++;
     } else if (c == EOF) {
       if (num_idx > 0) {
         number[num_idx] = '\0';
@@ -84,14 +95,23 @@ void parse(void)
             return;
         }
 
-        if (token->type != TPLUS)
-            error("+ expected");
+        enum TokenType op;
+        if (token->type != TPLUS && token->type != TMINUS)
+            error("+ or - expected");
+        else
+            op = token->type;
         
         token = get_token();
         if (token->type != TNUMBER)
             error("number expected");
-        else
-            printf("\taddl $%d, %%eax\n", token->int_value);
+        else {
+            if (op == TPLUS)
+                printf("\taddl $%d, %%eax\n", token->int_value);
+            else if (op == TMINUS)
+                printf("\tsubl $%d, %%eax\n", token->int_value);
+            else
+                error("unknown op");
+        }
     }
 }
 

@@ -24,4 +24,9 @@ runtest "1+1" 2
 runtest "0+0" 0
 runtest "64+32" 96
 
+# step 2.2
+runtest "2-1" 1
+runtest "1-1" 0
+runtest "64-32" 32
+
 echo OK
