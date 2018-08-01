@@ -17,7 +17,7 @@ struct Token {
 };
 
 struct Token tokens[100];
-struct Token *token;
+struct Token *token = tokens;
 
 void error(char *fmt, ...) {
   va_list args;
@@ -46,7 +46,7 @@ void tokenize(void) {
     if (c >= '0' && c <= '9') {
       number[num_idx] = c;
       num_idx++;
-    } else if (c == '+') {
+    } else {
       if (num_idx > 0) {
         number[num_idx] = '\0';
         p->type = TNUMBER;
@@ -54,48 +54,24 @@ void tokenize(void) {
         p++;
         num_idx = 0;
       }
-      p->type = TPLUS;
+      switch (c) {
+      case '+':
+        p->type = TPLUS;
+        break;
+      case '-':
+        p->type = TMINUS;
+        break;
+      case '*':
+        p->type = TMUL;
+        break;
+      case '/':
+        p->type = TDIV;
+        break;
+      case EOF:
+        p->type = TEOF;
+        return;
+      }
       p++;
-    } else if (c == '-') {
-      if (num_idx > 0) {
-        number[num_idx] = '\0';
-        p->type = TNUMBER;
-        p->int_value = atoi(number);
-        p++;
-        num_idx = 0;
-      }
-      p->type = TMINUS;
-      p++;
-    } else if (c == '*') {
-      if (num_idx > 0) {
-        number[num_idx] = '\0';
-        p->type = TNUMBER;
-        p->int_value = atoi(number);
-        p++;
-        num_idx = 0;
-      }
-      p->type = TMUL;
-      p++;
-    } else if (c == '/') {
-      if (num_idx > 0) {
-        number[num_idx] = '\0';
-        p->type = TNUMBER;
-        p->int_value = atoi(number);
-        p++;
-        num_idx = 0;
-      }
-      p->type = TDIV;
-      p++;
-    } else if (c == EOF) {
-      if (num_idx > 0) {
-        number[num_idx] = '\0';
-        p->type = TNUMBER;
-        p->int_value = atoi(number);
-        p++;
-        num_idx = 0;
-      }
-      p->type = TEOF;
-      break;
     }
   }
 }
@@ -107,7 +83,7 @@ void read_mul_div(void) {
   else
     printf("\tmovl $%d, %%eax\n", token->int_value);
 
-  while ((token+1)->type == TMUL || (token+1)->type == TDIV) {
+  while ((token + 1)->type == TMUL || (token + 1)->type == TDIV) {
     token = get_token();
     enum TokenType op = token->type;
     token = get_token();
@@ -128,7 +104,7 @@ void read_add_sub(void) {
   read_mul_div();
 
   struct Token *local_token;
-  while ((token+1)->type != TEOF) {
+  while ((token + 1)->type != TEOF) {
     printf("\tpushq %%rax\n");
     local_token = get_token();
     read_mul_div();
