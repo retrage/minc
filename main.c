@@ -1,6 +1,6 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 
 enum TokenType {
   TNUMBER,
@@ -16,8 +16,7 @@ struct Token {
 
 struct Token tokens[100];
 
-void error(char *fmt, ...)
-{
+void error(char *fmt, ...) {
   va_list args;
 
   va_start(args, fmt);
@@ -28,8 +27,7 @@ void error(char *fmt, ...)
   exit(1);
 }
 
-void tokenize(void)
-{
+void tokenize(void) {
   char c;
   struct Token *p = tokens;
   char number[128];
@@ -74,49 +72,46 @@ void tokenize(void)
   }
 }
 
-struct Token *get_token(void)
-{
+struct Token *get_token(void) {
   static struct Token *p = tokens;
   return p++;
 }
 
-void parse(void)
-{
-    struct Token *token = get_token();
-    if (token->type != TNUMBER)
-        error("number expected");
-    else
-        printf("\tmovl $%d, %%eax\n", token->int_value);
+void parse(void) {
+  struct Token *token = get_token();
+  if (token->type != TNUMBER)
+    error("number expected");
+  else
+    printf("\tmovl $%d, %%eax\n", token->int_value);
 
-    while (token != NULL) {
-        token = get_token();
-        if (token->type == TEOF) {
-            printf("\tret\n");
-            return;
-        }
-
-        enum TokenType op;
-        if (token->type != TPLUS && token->type != TMINUS)
-            error("+ or - expected");
-        else
-            op = token->type;
-        
-        token = get_token();
-        if (token->type != TNUMBER)
-            error("number expected");
-        else {
-            if (op == TPLUS)
-                printf("\taddl $%d, %%eax\n", token->int_value);
-            else if (op == TMINUS)
-                printf("\tsubl $%d, %%eax\n", token->int_value);
-            else
-                error("unknown op");
-        }
+  while (token != NULL) {
+    token = get_token();
+    if (token->type == TEOF) {
+      printf("\tret\n");
+      return;
     }
+
+    enum TokenType op;
+    if (token->type != TPLUS && token->type != TMINUS)
+      error("+ or - expected");
+    else
+      op = token->type;
+
+    token = get_token();
+    if (token->type != TNUMBER)
+      error("number expected");
+    else {
+      if (op == TPLUS)
+        printf("\taddl $%d, %%eax\n", token->int_value);
+      else if (op == TMINUS)
+        printf("\tsubl $%d, %%eax\n", token->int_value);
+      else
+        error("unknown op");
+    }
+  }
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   tokenize();
   printf(".globl main\n");
   printf("main:\n");
