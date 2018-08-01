@@ -3,10 +3,12 @@
 #include <stdlib.h>
 
 enum TokenType {
+  TEOF,
   TNUMBER,
   TPLUS,
   TMINUS,
-  TEOF,
+  TMUL,
+  TDIV,
 };
 
 struct Token {
@@ -15,6 +17,7 @@ struct Token {
 };
 
 struct Token tokens[100];
+struct Token *token;
 
 void error(char *fmt, ...) {
   va_list args;
@@ -25,6 +28,11 @@ void error(char *fmt, ...) {
   fprintf(stderr, "\n");
   va_end(args);
   exit(1);
+}
+
+struct Token *get_token(void) {
+  static struct Token *p = tokens;
+  return p++;
 }
 
 void tokenize(void) {
@@ -58,6 +66,26 @@ void tokenize(void) {
       }
       p->type = TMINUS;
       p++;
+    } else if (c == '*') {
+      if (num_idx > 0) {
+        number[num_idx] = '\0';
+        p->type = TNUMBER;
+        p->int_value = atoi(number);
+        p++;
+        num_idx = 0;
+      }
+      p->type = TMUL;
+      p++;
+    } else if (c == '/') {
+      if (num_idx > 0) {
+        number[num_idx] = '\0';
+        p->type = TNUMBER;
+        p->int_value = atoi(number);
+        p++;
+        num_idx = 0;
+      }
+      p->type = TDIV;
+      p++;
     } else if (c == EOF) {
       if (num_idx > 0) {
         number[num_idx] = '\0';
@@ -72,43 +100,54 @@ void tokenize(void) {
   }
 }
 
-struct Token *get_token(void) {
-  static struct Token *p = tokens;
-  return p++;
-}
-
-void parse(void) {
-  struct Token *token = get_token();
+void read_mul_div(void) {
+  token = get_token();
   if (token->type != TNUMBER)
-    error("number expected");
+    return;
   else
     printf("\tmovl $%d, %%eax\n", token->int_value);
 
-  while (token != NULL) {
+  while ((token+1)->type == TMUL || (token+1)->type == TDIV) {
     token = get_token();
-    if (token->type == TEOF) {
-      printf("\tret\n");
-      return;
-    }
-
-    enum TokenType op;
-    if (token->type != TPLUS && token->type != TMINUS)
-      error("+ or - expected");
-    else
-      op = token->type;
-
+    enum TokenType op = token->type;
     token = get_token();
     if (token->type != TNUMBER)
       error("number expected");
-    else {
-      if (op == TPLUS)
-        printf("\taddl $%d, %%eax\n", token->int_value);
-      else if (op == TMINUS)
-        printf("\tsubl $%d, %%eax\n", token->int_value);
-      else
-        error("unknown op");
+    if (op == TMUL) {
+      printf("\tmovl $%d, %%ecx\n", token->int_value);
+      printf("\tmul %%ecx\n");
+    } else if (op == TDIV) {
+      printf("\tmovl $%d, %%ecx\n", token->int_value);
+      printf("\tcqto\n");
+      printf("\tdiv %%ecx\n");
     }
   }
+}
+
+void read_add_sub(void) {
+  read_mul_div();
+
+  struct Token *local_token;
+  while ((token+1)->type != TEOF) {
+    printf("\tpushq %%rax\n");
+    local_token = get_token();
+    read_mul_div();
+    printf("\tpop %%rdi\n");
+
+    printf("\tmov %%rdi, %%rbx\n");
+    if (local_token->type == TPLUS)
+      printf("\taddl %%ebx, %%eax\n");
+    else if (local_token->type == TMINUS) {
+      printf("\tsubl %%eax, %%ebx\n");
+      printf("\tmov %%ebx, %%eax\n");
+    } else
+      error("+ or - exptected");
+  }
+}
+
+void parse(void) {
+  read_add_sub();
+  printf("\tret\n");
 }
 
 int main(int argc, char *argv[]) {
