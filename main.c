@@ -5,8 +5,8 @@
 enum TokenType {
   TEOF,
   TNUMBER,
-  TPLUS,
-  TMINUS,
+  TADD,
+  TSUB,
   TMUL,
   TDIV,
 };
@@ -56,10 +56,10 @@ void tokenize(void) {
       }
       switch (c) {
       case '+':
-        p->type = TPLUS;
+        p->type = TADD;
         break;
       case '-':
-        p->type = TMINUS;
+        p->type = TSUB;
         break;
       case '*':
         p->type = TMUL;
@@ -111,9 +111,9 @@ void read_add_sub(void) {
     printf("\tpop %%rdi\n");
 
     printf("\tmov %%rdi, %%rbx\n");
-    if (local_token->type == TPLUS)
+    if (local_token->type == TADD)
       printf("\taddl %%ebx, %%eax\n");
-    else if (local_token->type == TMINUS) {
+    else if (local_token->type == TSUB) {
       printf("\tsubl %%eax, %%ebx\n");
       printf("\tmov %%ebx, %%eax\n");
     } else
