@@ -87,6 +87,7 @@ void tokenize(void) {
   }
 }
 
+#ifdef DEBUG
 void dump_token(struct Token *p) {
   switch (p->type) {
     case TEOF:
@@ -115,6 +116,7 @@ void dump_token(struct Token *p) {
       break;
   }
 }
+#endif
 
 void read_term(void) {
   if ((token + 1)->type == TOPENBRACE) {
@@ -127,16 +129,20 @@ void read_term(void) {
     token = get_token();
     printf("\tmovl $%d, %%eax\n", token->int_value);
   } else {
+#ifdef DEBUG
     printf("# read_term: Token ");
     dump_token((token + 1));
+#endif
   }
 }
 
 void read_mul_div(void) {
   read_term();
 
+#ifdef DEBUG
   printf("# read_mul_div: Token ");
   dump_token((token + 1));
+#endif
   while ((token + 1)->type == TMUL || (token + 1)->type == TDIV) {
     token = get_token();
     enum TokenType op = token->type;
@@ -161,8 +167,10 @@ void read_add_sub(void) {
   while ((token + 1)->type != TEOF) {
     printf("\tpushq %%rax\n");
     local_token = get_token();
+#ifdef DEBUG
     printf("# read_add_sub: local_token ");
     dump_token(local_token);
+#endif
     read_mul_div();
     printf("\tpop %%rdi\n");
 
