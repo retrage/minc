@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void read_term(void);
+void read_mul_div(void);
+void read_add_sub(void);
+
 enum TokenType {
   TEOF,
   TNUMBER,
@@ -9,6 +13,8 @@ enum TokenType {
   TSUB,
   TMUL,
   TDIV,
+  TOPENBRACE,
+  TCLOSEBRACE,
 };
 
 struct Token {
@@ -17,7 +23,7 @@ struct Token {
 };
 
 struct Token tokens[100];
-struct Token *token = tokens;
+struct Token *token = tokens - 1;
 
 void error(char *fmt, ...) {
   va_list args;
@@ -31,8 +37,7 @@ void error(char *fmt, ...) {
 }
 
 struct Token *get_token(void) {
-  static struct Token *p = tokens;
-  return p++;
+  return ++token;
 }
 
 void tokenize(void) {
@@ -67,6 +72,12 @@ void tokenize(void) {
       case '/':
         p->type = TDIV;
         break;
+      case '(':
+        p->type = TOPENBRACE;
+        break;
+      case ')':
+        p->type = TCLOSEBRACE;
+        break;
       case EOF:
         p->type = TEOF;
         return;
@@ -76,24 +87,67 @@ void tokenize(void) {
   }
 }
 
-void read_mul_div(void) {
-  token = get_token();
-  if (token->type != TNUMBER)
-    return;
-  else
-    printf("\tmovl $%d, %%eax\n", token->int_value);
+void dump_token(struct Token *p) {
+  switch (p->type) {
+    case TEOF:
+      printf("TEOF\n");
+      break;
+    case TADD:
+      printf("TADD\n");
+      break;
+    case TSUB:
+      printf("TSUB\n");
+      break;
+    case TMUL:
+      printf("TMUL\n");
+      break;
+    case TDIV:
+      printf("TDIV\n");
+      break;
+    case TCLOSEBRACE:
+      printf("TCLOSEBRACE\n");
+      break;
+    case TOPENBRACE:
+      printf("TOPENBRACE\n");
+      break;
+    case TNUMBER:
+      printf("TNUMBER, int_value=%d\n", p->int_value);
+      break;
+  }
+}
 
+void read_term(void) {
+  if ((token + 1)->type == TOPENBRACE) {
+    token = get_token();
+    read_add_sub();
+    token = get_token();
+    if (token->type != TCLOSEBRACE)
+      error(") expected");
+  } else if ((token + 1)->type == TNUMBER) {
+    token = get_token();
+    printf("\tmovl $%d, %%eax\n", token->int_value);
+  } else {
+    printf("# read_term: Token ");
+    dump_token((token + 1));
+  }
+}
+
+void read_mul_div(void) {
+  read_term();
+
+  printf("# read_mul_div: Token ");
+  dump_token((token + 1));
   while ((token + 1)->type == TMUL || (token + 1)->type == TDIV) {
     token = get_token();
     enum TokenType op = token->type;
-    token = get_token();
-    if (token->type != TNUMBER)
-      error("number expected");
+    printf("\tpushq %%rax\n");
+    read_term();
+    printf("\tmov %%rax, %%rcx\n");
+    printf("\tpop %%rax\n");
+
     if (op == TMUL) {
-      printf("\tmovl $%d, %%ecx\n", token->int_value);
       printf("\tmul %%ecx\n");
     } else if (op == TDIV) {
-      printf("\tmovl $%d, %%ecx\n", token->int_value);
       printf("\tcqto\n");
       printf("\tdiv %%ecx\n");
     }
@@ -107,6 +161,8 @@ void read_add_sub(void) {
   while ((token + 1)->type != TEOF) {
     printf("\tpushq %%rax\n");
     local_token = get_token();
+    printf("# read_add_sub: local_token ");
+    dump_token(local_token);
     read_mul_div();
     printf("\tpop %%rdi\n");
 
