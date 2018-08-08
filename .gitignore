@@ -2,3 +2,5 @@ minc
 *.o
 *~
 *.swp
+tmp.*
+\.vagrant
