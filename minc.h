@@ -29,7 +29,7 @@ struct Token *token;
 
 /* debug.c */
 void error(char *fmt, ...);
-void dump_token(struct Token *p);
+char *dump_token(Token *p);
 
 /* parse.c */
 struct Token *get_token(void);
