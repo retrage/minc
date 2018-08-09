@@ -37,4 +37,12 @@ runtest "1+2*5" 11
 runtest "2*3+4*5" 26
 runtest "12/6-4/2" 0
 
+# step 2.4
+runtest "(2+5)*2" 14
+runtest "(8-2)/3" 2
+runtest "25*(1+3)" 100
+runtest "20/(5-1)" 5
+runtest "(3+4)*(5-2)" 21
+runtest "(21-1)/(7-2)" 4
+
 echo OK

@@ -154,26 +154,26 @@ void read_mul_div(void) {
 void read_add_sub(void) {
   read_mul_div();
 
-  struct Token *local_token;
-  while ((token + 1)->type != TEOF) {
+  while ((token + 1)->type == TADD || (token + 1)->type == TSUB) {
+    token = get_token();
+    enum TokenType op = token->type;
     printf("\tpushq %%rax\n");
-    local_token = get_token();
     read_mul_div();
     printf("\tpop %%rdi\n");
 
     printf("\tmov %%rdi, %%rbx\n");
-    if (local_token->type == TADD)
+    if (op == TADD)
       printf("\taddl %%ebx, %%eax\n");
-    else if (local_token->type == TSUB) {
+    else if (op == TSUB) {
       printf("\tsubl %%eax, %%ebx\n");
       printf("\tmov %%ebx, %%eax\n");
-    } else
-      error("+ or - exptected");
+    }
   }
 }
 
 void parse(void) {
-  read_add_sub();
+  while ((token + 1)->type != TEOF)
+    read_add_sub();
   printf("\tret\n");
 }
 
