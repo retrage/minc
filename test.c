@@ -23,3 +23,26 @@ int test_vector(void) {
 
   return 0;
 }
+
+int test_map(void) {
+  Map *map = map_new();
+  if (!map)
+    return 1;
+
+  map_push(map, "foo", (void *)1);
+  if (map_get(map, "foo") != (void *)1)
+    return 2;
+
+  map_push(map, "bar", (void *)2);
+  map_push(map, "baz", (void *)3);
+  if (map_get(map, "bar") != (void *)2)
+    return 3;
+  if (map_get(map, "baz") != (void *)3)
+    return 4;
+
+  map_push(map, "bar", (void *)4);
+  if (map_get(map, "bar") != (void *)4)
+      return 5;
+
+  return 0;
+}

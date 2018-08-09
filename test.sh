@@ -63,5 +63,6 @@ runtest "3*5+1;1+2*5;" 11
 
 # step 3.2
 runtest "test_vector" 0
+runtest "test_map" 0
 
 echo OK

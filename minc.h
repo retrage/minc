@@ -19,6 +19,7 @@ typedef enum {
   TNEQ,
   TSEMICOLON,
   TTESTVECTOR,
+  TTESTMAP,
 } TokenType;
 
 typedef struct {
@@ -32,6 +33,12 @@ typedef struct {
   void **buf;
 } Vector;
 
+typedef struct {
+  int map_len;
+  Vector *keys;
+  Vector *values;
+} Map;
+
 Token tokens[100];
 Token *token;
 
@@ -40,6 +47,11 @@ Vector *vector_new(void);
 void vector_push(Vector *vec, void *item);
 void *vector_get(Vector *vec, size_t);
 size_t vector_size(Vector *vec);
+
+/* map.c */
+Map *map_new(void);
+void map_push(Map *map, char *key, void *value);
+void *map_get(Map *map, char *key);
 
 /* debug.c */
 void error(char *fmt, ...);
@@ -57,5 +69,6 @@ void parse(void);
 
 /* test.c */
 int test_vector(void);
+int test_map(void);
 
 #endif /* MINC_H */

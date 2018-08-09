@@ -32,6 +32,8 @@ void tokenize(void) {
         string[str_idx] = '\0';
         if (!strcmp(string, "test_vector"))
           p->type = TTESTVECTOR;
+        else if (!strcmp(string, "test_map"))
+          p->type = TTESTMAP;
         else
           error("test_vector expected");
         p++;
@@ -170,6 +172,9 @@ void read_expr(void) {
 void parse(void) {
   if ((token + 1)->type == TTESTVECTOR) {
     int res = test_vector();
+    printf("\tmovl $%d, %%eax\n", res);
+  } else if ((token + 1)->type == TTESTMAP) {
+    int res = test_map();
     printf("\tmovl $%d, %%eax\n", res);
   } else {
     while ((token + 1)->type != TEOF)
