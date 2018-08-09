@@ -61,4 +61,7 @@ runtest "1+1;2-1;" 1
 runtest "3*5;4/2" 2
 runtest "3*5+1;1+2*5;" 11
 
+# step 3.2
+runtest "test_vector" 0
+
 echo OK

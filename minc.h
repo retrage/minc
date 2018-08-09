@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef enum {
   TEOF,
@@ -17,6 +18,7 @@ typedef enum {
   TEQ,
   TNEQ,
   TSEMICOLON,
+  TTESTVECTOR,
 } TokenType;
 
 typedef struct {
@@ -24,8 +26,20 @@ typedef struct {
   int int_value;
 } Token;
 
+typedef struct {
+  int vec_len;
+  int buf_len;
+  void **buf;
+} Vector;
+
 Token tokens[100];
 Token *token;
+
+/* vector.c */
+Vector *vector_new(void);
+void vector_push(Vector *vec, void *item);
+void *vector_get(Vector *vec, size_t);
+size_t vector_size(Vector *vec);
 
 /* debug.c */
 void error(char *fmt, ...);
@@ -40,5 +54,8 @@ void read_add_sub(void);
 void read_eq_neq(void);
 void read_expr(void);
 void parse(void);
+
+/* test.c */
+int test_vector(void);
 
 #endif /* MINC_H */

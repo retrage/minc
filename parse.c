@@ -9,12 +9,17 @@ void tokenize(void) {
   Token *p = tokens;
   char number[128];
   int num_idx = 0;
+  char string[128];
+  int str_idx = 0;
 
   while (1) {
     c = getchar();
     if (c >= '0' && c <= '9') {
       number[num_idx] = c;
       num_idx++;
+    } else if (c >= 'A' && c <= 'z') {
+      string[str_idx] = c;
+      str_idx++;
     } else {
       if (num_idx > 0) {
         number[num_idx] = '\0';
@@ -22,6 +27,15 @@ void tokenize(void) {
         p->int_value = atoi(number);
         p++;
         num_idx = 0;
+      }
+      if (str_idx > 0) {
+        string[str_idx] = '\0';
+        if (!strcmp(string, "test_vector"))
+          p->type = TTESTVECTOR;
+        else
+          error("test_vector expected");
+        p++;
+        str_idx = 0;
       }
       switch (c) {
       case '+':
@@ -154,7 +168,12 @@ void read_expr(void) {
 }
 
 void parse(void) {
-  while ((token + 1)->type != TEOF)
-    read_expr();
+  if ((token + 1)->type == TTESTVECTOR) {
+    int res = test_vector();
+    printf("\tmovl $%d, %%eax\n", res);
+  } else {
+    while ((token + 1)->type != TEOF)
+      read_expr();
+  }
   printf("\tret\n");
 }
