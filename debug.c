@@ -11,40 +11,29 @@ void error(char *fmt, ...) {
   exit(1);
 }
 
-void dump_token(struct Token *p) {
+char *dump_token(struct Token *p) {
   switch (p->type) {
   case TEOF:
-    printf("TEOF\n");
-    break;
+    return "TEOF";
   case TADD:
-    printf("TADD\n");
-    break;
+    return "TADD";
   case TSUB:
-    printf("TSUB\n");
-    break;
+    return "TSUB";
   case TMUL:
-    printf("TMUL\n");
-    break;
+    return "TMUL";
   case TDIV:
-    printf("TDIV\n");
-    break;
+    return "TDIV";
   case TCLOSEBRACE:
-    printf("TCLOSEBRACE\n");
-    break;
+    return "TCLOSEBRACE";
   case TOPENBRACE:
-    printf("TOPENBRACE\n");
-    break;
+    return "TOPENBRACE";
   case TEQ:
-    printf("TEQ\n");
-    break;
+    return "TEQ";
   case TNEQ:
-    printf("TNEQ\n");
-    break;
+    return "TNEQ";
   case TSEMICOLON:
-    printf("TSEMICOLON\n");
-    break;
+    return "TSEMICOLON";
   case TNUMBER:
-    printf("TNUMBER, int_value=%d\n", p->int_value);
-    break;
+    return "TNUMBER";
   }
 }
