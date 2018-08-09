@@ -11,7 +11,7 @@ void error(char *fmt, ...) {
   exit(1);
 }
 
-char *dump_token(struct Token *p) {
+char *dump_token(Token *p) {
   switch (p->type) {
   case TEOF:
     return "TEOF";

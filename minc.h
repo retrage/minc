@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-enum TokenType {
+typedef enum {
   TEOF,
   TNUMBER,
   TADD,
@@ -17,22 +17,22 @@ enum TokenType {
   TEQ,
   TNEQ,
   TSEMICOLON,
-};
+} TokenType;
 
-struct Token {
-  enum TokenType type;
+typedef struct {
+  TokenType type;
   int int_value;
-};
+} Token;
 
-struct Token tokens[100];
-struct Token *token;
+Token tokens[100];
+Token *token;
 
 /* debug.c */
 void error(char *fmt, ...);
 char *dump_token(Token *p);
 
 /* parse.c */
-struct Token *get_token(void);
+Token *get_token(void);
 void tokenize(void);
 void read_term(void);
 void read_mul_div(void);

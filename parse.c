@@ -1,12 +1,12 @@
 #include "minc.h"
 
-struct Token *get_token(void) {
+Token *get_token(void) {
   return ++token;
 }
 
 void tokenize(void) {
   char c;
-  struct Token *p = tokens;
+  Token *p = tokens;
   char number[128];
   int num_idx = 0;
 
@@ -89,7 +89,7 @@ void read_mul_div(void) {
 
   while ((token + 1)->type == TMUL || (token + 1)->type == TDIV) {
     token = get_token();
-    enum TokenType op = token->type;
+    TokenType op = token->type;
     printf("\tpushq %%rax\n");
     read_term();
     printf("\tmov %%rax, %%rdi\n");
@@ -109,7 +109,7 @@ void read_add_sub(void) {
 
   while ((token + 1)->type == TADD || (token + 1)->type == TSUB) {
     token = get_token();
-    enum TokenType op = token->type;
+    TokenType op = token->type;
     printf("\tpushq %%rax\n");
     read_mul_div();
     printf("\tmov %%rax, %%rdi\n");
@@ -128,7 +128,7 @@ void read_eq_neq(void) {
 
   while ((token + 1)->type == TEQ || (token + 1)->type == TNEQ) {
     token = get_token();
-    enum TokenType op = token->type;
+    TokenType op = token->type;
     printf("\tpushq %%rax\n");
     read_add_sub();
     printf("\tmov %%rax, %%rdi\n");
