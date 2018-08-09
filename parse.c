@@ -92,14 +92,14 @@ void read_mul_div(void) {
     enum TokenType op = token->type;
     printf("\tpushq %%rax\n");
     read_term();
-    printf("\tmov %%rax, %%rcx\n");
+    printf("\tmov %%rax, %%rdi\n");
     printf("\tpop %%rax\n");
 
     if (op == TMUL) {
-      printf("\tmul %%ecx\n");
+      printf("\tmul %%edi\n");
     } else if (op == TDIV) {
       printf("\tcqto\n");
-      printf("\tdiv %%ecx\n");
+      printf("\tdiv %%edi\n");
     }
   }
 }
@@ -112,14 +112,13 @@ void read_add_sub(void) {
     enum TokenType op = token->type;
     printf("\tpushq %%rax\n");
     read_mul_div();
-    printf("\tpop %%rdi\n");
+    printf("\tmov %%rax, %%rdi\n");
+    printf("\tpop %%rax\n");
 
-    printf("\tmov %%rdi, %%rbx\n");
     if (op == TADD)
-      printf("\taddl %%ebx, %%eax\n");
+      printf("\taddl %%edi, %%eax\n");
     else if (op == TSUB) {
-      printf("\tsubl %%eax, %%ebx\n");
-      printf("\tmov %%ebx, %%eax\n");
+      printf("\tsubl %%edi, %%eax\n");
     }
   }
 }
@@ -132,18 +131,16 @@ void read_eq_neq(void) {
     enum TokenType op = token->type;
     printf("\tpushq %%rax\n");
     read_add_sub();
-    printf("\tpop %%rdi\n");
+    printf("\tmov %%rax, %%rdi\n");
+    printf("\tpop %%rax\n");
 
-    printf("\tmov %%rdi, %%rbx\n");
+    printf("\tcmpl %%eax, %%edi\n");
     if (op == TEQ) {
-      printf("\tcmpl %%eax, %%ebx\n");
       printf("\tsete %%al\n");
-      printf("\tmovzbl %%al, %%eax\n");
     } else if (op == TNEQ) {
-      printf("\tcmpl %%eax, %%ebx\n");
       printf("\tsetne %%al\n");
-      printf("\tmovzbl %%al, %%eax\n");
     }
+    printf("\tmovzbl %%al, %%eax\n");
   }
 }
 
@@ -152,15 +149,7 @@ void read_expr(void) {
 
   while ((token + 1)->type == TSEMICOLON) {
     token = get_token();
-    enum TokenType op = token->type;
-    printf("\tpushq %%rax\n");
     read_eq_neq();
-    printf("\tpop %%rdi\n");
-
-    printf("\tmov %%rdi, %%rbx\n");
-    if (op == TSEMICOLON) {
-      /* do nothing */
-    }
   }
 }
 
