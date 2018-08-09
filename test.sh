@@ -45,4 +45,14 @@ runtest "20/(5-1)" 5
 runtest "(3+4)*(5-2)" 21
 runtest "(21-1)/(7-2)" 4
 
+# step 2.5
+runtest "1==1" 1
+runtest "1==2" 0
+runtest "1!=1" 0
+runtest "1!=2" 1
+runtest "2+2==8/2" 1
+runtest "6-2==1*7" 0
+runtest "(4-2)*(5+1)!=(4+8)/3" 1
+runtest "(4-2)*(5+1)==(4+8)/3" 0
+
 echo OK

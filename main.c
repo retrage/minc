@@ -15,6 +15,8 @@ enum TokenType {
   TDIV,
   TOPENBRACE,
   TCLOSEBRACE,
+  TEQ,
+  TNEQ,
 };
 
 struct Token {
@@ -78,6 +80,20 @@ void tokenize(void) {
       case ')':
         p->type = TCLOSEBRACE;
         break;
+      case '=':
+        c = getchar();
+        if (c == '=')
+          p->type = TEQ;
+        else
+          error("== expected");
+        break;
+      case '!':
+        c = getchar();
+        if (c == '=')
+          p->type = TNEQ;
+        else
+          error("!= expected");
+        break;
       case EOF:
         p->type = TEOF;
         return;
@@ -110,6 +126,12 @@ void dump_token(struct Token *p) {
       break;
     case TOPENBRACE:
       printf("TOPENBRACE\n");
+      break;
+    case TEQ:
+      printf("TEQ\n");
+      break;
+    case TNEQ:
+      printf("TNEQ\n");
       break;
     case TNUMBER:
       printf("TNUMBER, int_value=%d\n", p->int_value);
@@ -171,9 +193,32 @@ void read_add_sub(void) {
   }
 }
 
+void read_eq_neq(void) {
+  read_add_sub();
+
+  while ((token + 1)->type == TEQ || (token + 1)->type == TNEQ) {
+    token = get_token();
+    enum TokenType op = token->type;
+    printf("\tpushq %%rax\n");
+    read_add_sub();
+    printf("\tpop %%rdi\n");
+
+    printf("\tmov %%rdi, %%rbx\n");
+    if (op == TEQ) {
+      printf("\tcmpl %%eax, %%ebx\n");
+      printf("\tsete %%al\n");
+      printf("\tmovzbl %%al, %%eax\n");
+    } else if (op == TNEQ) {
+      printf("\tcmpl %%eax, %%ebx\n");
+      printf("\tsetne %%al\n");
+      printf("\tmovzbl %%al, %%eax\n");
+    }
+  }
+}
+
 void parse(void) {
   while ((token + 1)->type != TEOF)
-    read_add_sub();
+    read_eq_neq();
   printf("\tret\n");
 }
 
