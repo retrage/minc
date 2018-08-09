@@ -28,21 +28,29 @@ int test_map(void) {
   Map *map = map_new();
   if (!map)
     return 1;
+  if (map_size(map) != 0)
+    return 2;
 
   map_push(map, "foo", (void *)1);
   if (map_get(map, "foo") != (void *)1)
-    return 2;
+    return 3;
+  if (map_size(map) != 1)
+    return 4;
 
   map_push(map, "bar", (void *)2);
   map_push(map, "baz", (void *)3);
   if (map_get(map, "bar") != (void *)2)
-    return 3;
+    return 5;
   if (map_get(map, "baz") != (void *)3)
-    return 4;
+    return 6;
+  if (map_size(map) != 3)
+    return 7;
 
   map_push(map, "bar", (void *)4);
   if (map_get(map, "bar") != (void *)4)
-      return 5;
+      return 8;
+  if (map_size(map) != 3)
+    return 9;
 
   return 0;
 }
