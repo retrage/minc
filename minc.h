@@ -44,18 +44,18 @@ Token *token;
 
 /* vector.c */
 Vector *vector_new(void);
-void vector_push(Vector *vec, void *item);
-void *vector_get(Vector *vec, size_t);
-size_t vector_size(Vector *vec);
+void vector_push(Vector *, void *);
+void *vector_get(Vector *, size_t);
+size_t vector_size(Vector *);
 
 /* map.c */
 Map *map_new(void);
-void map_push(Map *map, char *key, void *value);
-void *map_get(Map *map, char *key);
+void map_push(Map *, char *, void *);
+void *map_get(Map *, char *);
 
 /* debug.c */
-void error(char *fmt, ...);
-char *dump_token(Token *p);
+void error(char *, ...);
+char *dump_token(Token *);
 
 /* parse.c */
 Token *get_token(void);
