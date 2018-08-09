@@ -55,4 +55,10 @@ runtest "6-2==1*7" 0
 runtest "(4-2)*(5+1)!=(4+8)/3" 1
 runtest "(4-2)*(5+1)==(4+8)/3" 0
 
+# step 3.1
+runtest "1;2;" 2
+runtest "1+1;2-1;" 1
+runtest "3*5;4/2" 2
+runtest "3*5+1;1+2*5;" 11
+
 echo OK

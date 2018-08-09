@@ -17,6 +17,7 @@ enum TokenType {
   TCLOSEBRACE,
   TEQ,
   TNEQ,
+  TSEMICOLON,
 };
 
 struct Token {
@@ -94,6 +95,9 @@ void tokenize(void) {
         else
           error("!= expected");
         break;
+      case ';':
+        p->type = TSEMICOLON;
+        break;
       case EOF:
         p->type = TEOF;
         return;
@@ -132,6 +136,9 @@ void dump_token(struct Token *p) {
       break;
     case TNEQ:
       printf("TNEQ\n");
+      break;
+    case TSEMICOLON:
+      printf("TSEMICOLON\n");
       break;
     case TNUMBER:
       printf("TNUMBER, int_value=%d\n", p->int_value);
@@ -216,9 +223,26 @@ void read_eq_neq(void) {
   }
 }
 
+void read_expr(void) {
+  read_eq_neq();
+
+  while ((token + 1)->type == TSEMICOLON) {
+    token = get_token();
+    enum TokenType op = token->type;
+    printf("\tpushq %%rax\n");
+    read_eq_neq();
+    printf("\tpop %%rdi\n");
+
+    printf("\tmov %%rdi, %%rbx\n");
+    if (op == TSEMICOLON) {
+      /* do nothing */
+    }
+  }
+}
+
 void parse(void) {
   while ((token + 1)->type != TEOF)
-    read_eq_neq();
+    read_expr();
   printf("\tret\n");
 }
 
