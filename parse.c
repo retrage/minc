@@ -62,6 +62,9 @@ void tokenize(void) {
       case EOF:
         p->type = TEOF;
         return;
+      case ' ':
+      case '\t':
+        continue;
       }
       p++;
     }
