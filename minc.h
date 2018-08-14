@@ -53,6 +53,7 @@ Map *map_new(void);
 void map_push(Map *, char *, void *);
 void *map_get(Map *, char *);
 size_t map_size(Map *);
+Vector *map_keys(Map *);
 
 /* debug.c */
 void error(char *, ...);

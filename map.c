@@ -50,3 +50,25 @@ size_t map_size(Map *map) {
 
   return keys_size - dup_count;
 }
+
+Vector *map_keys(Map *map) {
+  Vector *keys = vector_new();
+  size_t keys_size = vector_size(map->keys);
+  if (keys_size == 0)
+    return keys;
+
+  vector_push(keys, vector_get(map->keys, 0));
+  for (int rhs = 0; rhs < keys_size; rhs++) {
+    char *rhs_string = vector_get(map->keys, rhs);
+    int is_dup = 0;
+    for (int lhs = 0; lhs < vector_size(keys); lhs++) {
+      char *lhs_string = vector_get(keys, lhs);
+      if (!strcmp(rhs_string, lhs_string))
+        is_dup++;
+    }
+    if (!is_dup)
+      vector_push(keys, rhs_string);
+  }
+
+  return keys;
+}

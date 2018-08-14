@@ -52,5 +52,16 @@ int test_map(void) {
   if (map_size(map) != 3)
     return 9;
 
+  Vector *keys = map_keys(map);
+  if (vector_size(keys) != 3)
+    return vector_size(keys) + 100;
+
+  if (strcmp((char *)vector_get(keys, 0), "foo"))
+    return 11;
+  if (strcmp((char *)vector_get(keys, 1), "bar"))
+    return 12;
+  if (strcmp((char *)vector_get(keys, 2),"baz"))
+    return 13;
+
   return 0;
 }
