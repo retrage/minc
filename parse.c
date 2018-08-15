@@ -119,10 +119,8 @@ void read_term(void) {
             error(", expected");
           token = get_token();
         }
-        token = get_token();
-        if (token->type != TNUMBER)
-          error("number expected got %s", dump_token(token));
-        printf("\tmovq $%d, %%%s\n", token->int_value, registers[i]);
+        read_expr();
+        printf("\tmov %%rax, %%%s\n", registers[i]);
         i++;
       }
       token = get_token();

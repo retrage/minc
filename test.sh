@@ -90,5 +90,7 @@ runtest "a = 1 * (2 + 3); b = (7 - 1) / 2;" 0
 calltest "foo();" "test4-1-1" "OK"
 calltest "bar(1, 2);" "test4-1-2" "x=1, y=2, x+y=3"
 calltest "baz(1, 2, 3, 4, 5, 6);" "test4-1-3" "21"
+calltest "hog(1 + 2, 3);" "test4-1-4" "9"
+calltest "hog((4-2)*(5+1) != (4+8)/3, 5);" "test4-1-4" "5"
 
 echo OK
