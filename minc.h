@@ -21,6 +21,9 @@ typedef enum {
   TIDENTIFIER,
   TASSIGN,
   TCOMMA,
+  TOPENBRACE,
+  TCLOSEBRACE,
+  TRETURN,
   TTESTVECTOR,
   TTESTMAP,
 } TokenType;

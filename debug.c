@@ -39,6 +39,12 @@ char *dump_token(Token *p) {
     return "TASSIGN";
   case TCOMMA:
     return "TCOMMA";
+  case TOPENBRACE:
+    return "TOPENBRACE";
+  case TCLOSEBRACE:
+    return "TCLOSEBRACE";
+  case TRETURN:
+    return "TRETURN";
   case TTESTVECTOR:
     return "TTESTVECTOR";
   case TTESTMAP:
