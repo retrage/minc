@@ -13,3 +13,5 @@ test: $(TARGET)
 
 clean:
 	rm -f $(TARGET) *.o *~
+
+.PHONY: test clean
