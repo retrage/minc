@@ -46,3 +46,16 @@ char *dump_token(Token *p) {
   }
   return "UNK";
 }
+
+void dump_tokens(void) {
+  for (Token *p = tokens; p->type != TEOF; p++)
+    printf("# %s\n", dump_token(p));
+}
+
+void dump_map(Map *map) {
+  for (int i = 0; i < map_size(map); i++) {
+    printf("# Map: %s %ld\n",
+            (char *)vector_get(map->keys, i),
+            (long)vector_get(map->values, i));
+  }
+}

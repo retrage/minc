@@ -63,6 +63,8 @@ Vector *map_keys(Map *);
 /* debug.c */
 void error(char *, ...);
 char *dump_token(Token *);
+void dump_tokens(void);
+void dump_map(Map *);
 
 /* parse.c */
 Token *get_token(void);
