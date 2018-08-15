@@ -36,19 +36,9 @@ void *map_get(Map *map, char *key) {
 }
 
 size_t map_size(Map *map) {
-  size_t keys_size = vector_size(map->keys);
-  if (keys_size < 2)
-    return keys_size;
+  Vector *keys = map_keys(map);
 
-  int dup_count = 0;
-  for (int rhs = 0; rhs < keys_size; rhs++) {
-    for (int lhs = rhs+1; lhs < keys_size; lhs++) {
-      if (!strcmp(vector_get(map->keys, rhs), vector_get(map->keys, lhs)))
-        dup_count++;
-    }
-  }
-
-  return keys_size - dup_count;
+  return vector_size(keys);
 }
 
 Vector *map_keys(Map *map) {
