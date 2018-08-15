@@ -37,6 +37,8 @@ char *dump_token(Token *p) {
     return "TIDENTIFIER";
   case TASSIGN:
     return "TASSIGN";
+  case TCOMMA:
+    return "TCOMMA";
   case TTESTVECTOR:
     return "TTESTVECTOR";
   case TTESTMAP:

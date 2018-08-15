@@ -1,5 +1,7 @@
 #include "minc.h"
 
+char *registers[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+
 Token *get_token(void) {
   return ++token;
 }
@@ -78,6 +80,9 @@ void tokenize(void) {
       case ';':
         p->type = TSEMICOLON;
         break;
+      case ',':
+        p->type = TCOMMA;
+        break;
       case EOF:
         p->type = TEOF;
         return;
@@ -102,10 +107,34 @@ void read_term(void) {
     printf("\tmovl $%d, %%eax\n", token->int_value);
   } else if ((token + 1)->type == TIDENTIFIER) {
     token = get_token();
-    long offset = (long)map_get(ident, token->identifier);
-    if (!offset)
-      error("variable expected");
-    printf("\tleaq %ld(%%rbp), %%rax\n", offset);
+
+    if ((token + 1)->type == TOPENBRACE) {
+      char *func = token->identifier;
+      token = get_token();
+
+      int i = 0;
+      while ((token + 1)->type != TCLOSEBRACE) {
+        if (i > 0) {
+          if ((token + 1)->type != TCOMMA)
+            error(", expected");
+          token = get_token();
+        }
+        token = get_token();
+        if (token->type != TNUMBER)
+          error("number expected got %s", dump_token(token));
+        printf("\tmovq $%d, %%%s\n", token->int_value, registers[i]);
+        i++;
+      }
+      token = get_token();
+      if (token->type != TCLOSEBRACE)
+        error(") expected");
+      printf("\tcall %s\n", func);
+    } else {
+      long offset = (long)map_get(ident, token->identifier);
+      if (!offset)
+        error("variable expected");
+      printf("\tleaq %ld(%%rbp), %%rax\n", offset);
+    }
   }
 }
 

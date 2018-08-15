@@ -20,6 +20,7 @@ typedef enum {
   TSEMICOLON,
   TIDENTIFIER,
   TASSIGN,
+  TCOMMA,
   TTESTVECTOR,
   TTESTMAP,
 } TokenType;

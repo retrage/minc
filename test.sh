@@ -14,6 +14,21 @@ runtest() {
     rm -f tmp.{s,exe}
 }
 
+calltest() {
+    echo "$1" | ./minc > tmp.s
+    cc -o tmp.o -c tmp.s
+    cc -o "test/$2.o" -c "test/$2.c"
+    cc -o tmp.exe tmp.o "test/$2.o"
+
+    out=`./tmp.exe`
+    if [ "$out" != "$3" ]; then
+        echo "$1: $3 expected, but got $out"
+        exit 1
+    fi
+    echo "$1 => $3"
+    rm -f tmp.{s,exe}
+}
+
 # step 1
 runtest "0" 0
 runtest "1" 1
@@ -70,5 +85,10 @@ runtest "a = 1;" 0
 runtest "b = 1 + 2;" 0
 runtest "a = 1; b = 2;" 0
 runtest "a = 1 * (2 + 3); b = (7 - 1) / 2;" 0
+
+# step 4.1
+calltest "foo();" "test4-1-1" "OK"
+calltest "bar(1, 2);" "test4-1-2" "x=1, y=2, x+y=3"
+calltest "baz(1, 2, 3, 4, 5, 6);" "test4-1-3" "21"
 
 echo OK
