@@ -18,6 +18,8 @@ typedef enum {
   TEQ,
   TNEQ,
   TSEMICOLON,
+  TIDENTIFIER,
+  TASSIGN,
   TTESTVECTOR,
   TTESTMAP,
 } TokenType;
@@ -25,6 +27,7 @@ typedef enum {
 typedef struct {
   TokenType type;
   int int_value;
+  char identifier[1024];
 } Token;
 
 typedef struct {
@@ -41,6 +44,8 @@ typedef struct {
 
 Token tokens[100];
 Token *token;
+Map *ident;
+long rbp_offset;
 
 /* vector.c */
 Vector *vector_new(void);
@@ -65,7 +70,7 @@ void tokenize(void);
 void read_term(void);
 void read_mul_div(void);
 void read_add_sub(void);
-void read_eq_neq(void);
+void read_eq_neq_assgin(void);
 void read_expr(void);
 void parse(void);
 

@@ -33,6 +33,10 @@ char *dump_token(Token *p) {
     return "TNEQ";
   case TSEMICOLON:
     return "TSEMICOLON";
+  case TIDENTIFIER:
+    return "TIDENTIFIER";
+  case TASSIGN:
+    return "TASSIGN";
   case TTESTVECTOR:
     return "TTESTVECTOR";
   case TTESTMAP:

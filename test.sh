@@ -65,4 +65,10 @@ runtest "3*5+1;1+2*5;" 11
 runtest "test_vector" 0
 runtest "test_map" 0
 
+# step 3.3
+runtest "a = 1;" 0
+runtest "b = 1 + 2;" 0
+runtest "a = 1; b = 2;" 0
+runtest "a = 1 * (2 + 3); b = (7 - 1) / 2;" 0
+
 echo OK

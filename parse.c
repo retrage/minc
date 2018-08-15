@@ -17,7 +17,7 @@ void tokenize(void) {
     if (c >= '0' && c <= '9') {
       number[num_idx] = c;
       num_idx++;
-    } else if (c >= 'A' && c <= 'z') {
+    } else if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_') {
       string[str_idx] = c;
       str_idx++;
     } else {
@@ -34,8 +34,11 @@ void tokenize(void) {
           p->type = TTESTVECTOR;
         else if (!strcmp(string, "test_map"))
           p->type = TTESTMAP;
-        else
-          error("test_vector expected");
+        else {
+          p->type = TIDENTIFIER;
+          strcpy(p->identifier, string);
+          map_push(ident, p->identifier, (void *)0);
+        }
         p++;
         str_idx = 0;
       }
@@ -63,7 +66,7 @@ void tokenize(void) {
         if (c == '=')
           p->type = TEQ;
         else
-          error("== expected");
+          p->type = TASSIGN;
         break;
       case '!':
         c = getchar();
@@ -97,6 +100,12 @@ void read_term(void) {
   } else if ((token + 1)->type == TNUMBER) {
     token = get_token();
     printf("\tmovl $%d, %%eax\n", token->int_value);
+  } else if ((token + 1)->type == TIDENTIFIER) {
+    token = get_token();
+    long offset = (long)map_get(ident, token->identifier);
+    if (!offset)
+      error("variable expected");
+    printf("\tleaq %ld(%%rbp), %%rax\n", offset);
   }
 }
 
@@ -139,10 +148,11 @@ void read_add_sub(void) {
   }
 }
 
-void read_eq_neq(void) {
+void read_eq_neq_assgin(void) {
   read_add_sub();
 
-  while ((token + 1)->type == TEQ || (token + 1)->type == TNEQ) {
+  while ((token + 1)->type == TEQ || (token + 1)->type == TNEQ || \
+          (token + 1)->type == TASSIGN) {
     token = get_token();
     TokenType op = token->type;
     printf("\tpushq %%rax\n");
@@ -150,22 +160,26 @@ void read_eq_neq(void) {
     printf("\tmov %%rax, %%rdi\n");
     printf("\tpop %%rax\n");
 
-    printf("\tcmpl %%eax, %%edi\n");
-    if (op == TEQ) {
-      printf("\tsete %%al\n");
-    } else if (op == TNEQ) {
-      printf("\tsetne %%al\n");
+    if (op == TEQ || op == TNEQ) {
+      printf("\tcmpl %%eax, %%edi\n");
+        if (op == TEQ) {
+          printf("\tsete %%al\n");
+        } else if (op == TNEQ) {
+          printf("\tsetne %%al\n");
+        }
+      printf("\tmovzbl %%al, %%eax\n");
+    } else if (op == TASSIGN) {
+      printf("\tmovl %%edi, (%%rax)\n");
     }
-    printf("\tmovzbl %%al, %%eax\n");
   }
 }
 
 void read_expr(void) {
-  read_eq_neq();
+  read_eq_neq_assgin();
 
   while ((token + 1)->type == TSEMICOLON) {
     token = get_token();
-    read_eq_neq();
+    read_eq_neq_assgin();
   }
 }
 
@@ -180,5 +194,4 @@ void parse(void) {
     while ((token + 1)->type != TEOF)
       read_expr();
   }
-  printf("\tret\n");
 }
