@@ -5,7 +5,7 @@ int test_vector(void) {
   if (vector_size(vec) != 0)
     return 1;
 
-  char *string1 = malloc(sizeof(char)*128);
+  char *string1 = malloc(sizeof(char) * 128);
   strcpy(string1, "deadbeef");
   vector_push(vec, string1);
   if (vector_size(vec) != 1)
@@ -13,12 +13,13 @@ int test_vector(void) {
   if (strcmp((char *)vector_get(vec, 0), "deadbeef"))
     return 3;
 
-  char *string2 = malloc(sizeof(char)*128);
+  char *string2 = malloc(sizeof(char) * 128);
   strcpy(string2, "the quick brown fox jumps over the lazy dog");
   vector_push(vec, string2);
   if (vector_size(vec) != 2)
     return 4;
-  if (strcmp((char *)vector_get(vec, 1), "the quick brown fox jumps over the lazy dog"))
+  if (strcmp((char *)vector_get(vec, 1),
+             "the quick brown fox jumps over the lazy dog"))
     return 5;
 
   return 0;
@@ -48,7 +49,7 @@ int test_map(void) {
 
   map_push(map, "bar", (void *)4);
   if (map_get(map, "bar") != (void *)4)
-      return 8;
+    return 8;
   if (map_size(map) != 3)
     return 9;
 
@@ -60,7 +61,7 @@ int test_map(void) {
     return 11;
   if (strcmp((char *)vector_get(keys, 1), "bar"))
     return 12;
-  if (strcmp((char *)vector_get(keys, 2),"baz"))
+  if (strcmp((char *)vector_get(keys, 2), "baz"))
     return 13;
 
   return 0;
