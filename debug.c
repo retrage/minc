@@ -23,10 +23,10 @@ char *dump_token(Token *p) {
     return "TMUL";
   case TDIV:
     return "TDIV";
-  case TCLOSEBRACE:
-    return "TCLOSEBRACE";
-  case TOPENBRACE:
-    return "TOPENBRACE";
+  case TOPENPARENTHESIS:
+    return "TOPENPARENTHIS";
+  case TCLOSEPARENTHESIS:
+    return "TCLOSEPARENTHIS";
   case TEQ:
     return "TEQ";
   case TNEQ:

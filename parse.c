@@ -58,10 +58,10 @@ void tokenize(void) {
         p->type = TDIV;
         break;
       case '(':
-        p->type = TOPENBRACE;
+        p->type = TOPENPARENTHESIS;
         break;
       case ')':
-        p->type = TCLOSEBRACE;
+        p->type = TCLOSEPARENTHESIS;
         break;
       case '=':
         c = getchar();
@@ -96,11 +96,11 @@ void tokenize(void) {
 }
 
 void read_term(void) {
-  if ((token + 1)->type == TOPENBRACE) {
+  if ((token + 1)->type == TOPENPARENTHESIS) {
     token = get_token();
     read_add_sub();
     token = get_token();
-    if (token->type != TCLOSEBRACE)
+    if (token->type != TCLOSEPARENTHESIS)
       error(") expected");
   } else if ((token + 1)->type == TNUMBER) {
     token = get_token();
@@ -108,12 +108,12 @@ void read_term(void) {
   } else if ((token + 1)->type == TIDENTIFIER) {
     token = get_token();
 
-    if ((token + 1)->type == TOPENBRACE) {
+    if ((token + 1)->type == TOPENPARENTHESIS) {
       char *func = token->identifier;
       token = get_token();
 
       int i = 0;
-      while ((token + 1)->type != TCLOSEBRACE) {
+      while ((token + 1)->type != TCLOSEPARENTHESIS) {
         if (i > 0) {
           if ((token + 1)->type != TCOMMA)
             error(", expected");
@@ -124,7 +124,7 @@ void read_term(void) {
         i++;
       }
       token = get_token();
-      if (token->type != TCLOSEBRACE)
+      if (token->type != TCLOSEPARENTHESIS)
         error(") expected");
       printf("\tcall %s\n", func);
     } else {
