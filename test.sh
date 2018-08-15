@@ -26,7 +26,7 @@ calltest() {
         exit 1
     fi
     echo "$1 => $3"
-    rm -f tmp.{s,exe}
+    rm -f tmp.{s,exe,o}
 }
 
 # step 1
