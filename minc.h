@@ -46,6 +46,7 @@ typedef struct {
   Vector *values;
 } Map;
 
+char *source;
 Token tokens[100];
 Token *token;
 Map *ident;
@@ -70,9 +71,11 @@ char *dump_token(Token *);
 void dump_tokens(void);
 void dump_map(Map *);
 
+/* lex.c */
+void tokenize(void);
+
 /* parse.c */
 Token *get_token(void);
-void tokenize(void);
 void read_term(void);
 void read_mul_div(void);
 void read_add_sub(void);
