@@ -1,8 +1,7 @@
 #include "minc.h"
 
-int src_len;
 int src_pos;
-Token *next_token;
+int token_pos;
 
 void read_src(void) {
   size_t i = 0;
@@ -24,8 +23,10 @@ void read_src(void) {
       break;
     i++;
   }
+}
 
-  src_len = (size_t)i;
+static void next(void) {
+  token_pos++;
 }
 
 static int is_digit(char c) {
@@ -43,7 +44,7 @@ static int is_letter(char c) {
 }
 
 static void read_number(void) {
-  char literal[1024];
+  char *literal = malloc(sizeof(char) * 1024);
   int idx = 0;
 
   while (1) {
@@ -54,9 +55,9 @@ static void read_number(void) {
     } else {
       if (idx > 0) {
         literal[idx] = '\0';
-        next_token->type = TNUMBER;
-        next_token->int_value = atoi(literal);
-        next_token++;
+        tokens[token_pos].type = TNUMBER;
+        tokens[token_pos].sval = literal;
+        next();
       }
       return;
     }
@@ -81,18 +82,23 @@ static void read_string(void) {
         idx++;
       } else {
         string[idx] = '\0';
-        if (!strcmp(string, "test_vector"))
-          next_token->type = TTESTVECTOR;
-        else if (!strcmp(string, "test_map"))
-          next_token->type = TTESTMAP;
-        else if (!strcmp(string, "return"))
-          next_token->type = TRETURN;
-        else {
-          next_token->type = TIDENTIFIER;
-          strcpy(next_token->identifier, string);
-          map_push(ident, next_token->identifier, (void *)0);
+        if (!strcmp(string, "test_vector")) {
+          tokens[token_pos].type = TKEYWORD;
+          tokens[token_pos].id = KTESTVECTOR;
+        } else if (!strcmp(string, "test_map")) {
+          tokens[token_pos].type = TKEYWORD;
+          tokens[token_pos].id = KTESTMAP;
+        } else if (!strcmp(string, "return")) {
+          tokens[token_pos].type = TKEYWORD;
+          tokens[token_pos].id = KRETURN;
+        } else {
+          if (strlen(string) > 128)
+            error("string too long");
+          tokens[token_pos].type = TIDENT;
+          tokens[token_pos].sval = malloc(sizeof(char) * 128);
+          strcpy(tokens[token_pos].sval, string);
         }
-        next_token++;
+        next();
         return;
       }
     }
@@ -100,49 +106,41 @@ static void read_string(void) {
 }
 
 static void read_symbol(void) {
+  char symbol[2];
+
   switch (source[src_pos + 1]) {
     case '+':
-      next_token->type = TADD;
-      break;
     case '-':
-      next_token->type = TSUB;
-      break;
     case '*':
-      next_token->type = TMUL;
-      break;
     case '/':
-      next_token->type = TDIV;
-      break;
     case '(':
-      next_token->type = TOPENPARENTHESIS;
-      break;
     case ')':
-      next_token->type = TCLOSEPARENTHESIS;
-      break;
     case ';':
-      next_token->type = TSEMICOLON;
-      break;
     case ',':
-      next_token->type = TCOMMA;
-      break;
     case '{':
-      next_token->type = TOPENBRACE;
-      break;
     case '}':
-      next_token->type = TCLOSEBRACE;
+      symbol[0] = source[src_pos + 1];
+      symbol[1] = '\0';
+      tokens[token_pos].type = TPUNCTUATOR;
+      tokens[token_pos].sval = malloc(sizeof(char) * 4);
+      strcpy(tokens[token_pos].sval, symbol);
       break;
     case '=':
+      tokens[token_pos].type = TPUNCTUATOR;
+      tokens[token_pos].sval = malloc(sizeof(char) * 4);
       if (source[src_pos + 2] == '=') {
+        strcpy(tokens[token_pos].sval, "==");
         src_pos++;
-        next_token->type = TEQ;
       } else {
-        next_token->type = TASSIGN;
+        strcpy(tokens[token_pos].sval, "=");
       }
       break;
     case '!':
       if (source[src_pos + 2] == '=') {
+        tokens[token_pos].type = TPUNCTUATOR;
+        tokens[token_pos].sval = malloc(sizeof(char) * 4);
+        strcpy(tokens[token_pos].sval, "!=");
         src_pos++;
-        next_token->type = TNEQ;
       } else {
         error("!= expected");
       }
@@ -150,17 +148,16 @@ static void read_symbol(void) {
     default:
       return;
   }
-  next_token++;
+  next();
 }
 
-static void init_tokenizer(void) {
+static void tokenize_init(void) {
   src_pos = -1;
-  src_len = 0;
-  next_token = tokens;
+  token_pos = 0;
 }
 
 void tokenize(void) {
-  init_tokenizer();
+  tokenize_init();
   read_src();
  
   while (1) {
@@ -169,7 +166,7 @@ void tokenize(void) {
     read_symbol();
 
     if (source[src_pos + 1] == EOF) {
-      next_token->type = TEOF;
+      tokens[token_pos].type = TEOF;
       break;
     }
     src_pos++;

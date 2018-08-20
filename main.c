@@ -1,16 +1,21 @@
 #include "minc.h"
 
 static void init(void) {
-  token = tokens - 1;
-  ident = map_new();
-  rbp_offset = 0x0;
+  parse_init();
 }
 
 int main(int argc, char *argv[]) {
   init();
   tokenize();
-  printf(".globl main\n");
-  parse();
+
+  Vector *toplevels = parse_toplevel();
+
+  for (int i = 0; i < vector_size(toplevels); i++)
+    printf("# %s\n", node2s(vector_get(toplevels, i)));
+
+  analyze_toplevel(toplevels);
+
+  emit_toplevel(toplevels);
 
   return 0;
 }

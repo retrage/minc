@@ -24,6 +24,79 @@ typedef struct {
   Vector *values;
 } Map;
 
+/* Token type */
+enum {
+  TEOF,
+  TNUMBER,
+  TIDENT,
+  TKEYWORD,
+  TPUNCTUATOR,
+};
+
+/* Keyword */
+enum {
+  KTESTVECTOR,
+  KTESTMAP,
+  KRETURN,
+};
+
+typedef struct {
+  int type;
+  int id;
+  char *sval;
+} Token;
+
+enum {
+  UNK = 0,
+  AST_FUNC,
+  AST_FUNC_CALL,
+  AST_COMP_STMT,
+  AST_LITERAL,
+  AST_LVAR,
+  AST_EXPR,
+  AST_RETURN,
+  AST_TESTVECTOR,
+  AST_TESTMAP,
+  OP_EQ,
+  OP_NEQ,
+  OP_ASSGIN,
+  OP_ADD,
+  OP_SUB,
+  OP_MUL,
+  OP_DIV,
+};
+
+typedef struct Node {
+  int type;
+  union {
+    /* Function declaration and Call */
+    struct {
+      char *func_name;
+      Map *env;
+      struct Node *body;
+      Vector *arguments;
+    };
+    /* Compound statement */
+    Vector *stmts;
+    /* Binary operator */
+    struct {
+      struct Node *left;
+      struct Node *right;
+    };
+    /* Integer */
+    int int_value;
+    /* Local variable */
+    struct {
+      char *var_name;
+      long offset;
+    };
+    /* Return */
+    struct Node *retval;
+    /* Expression */
+    struct Node *expr;
+  };
+} Node;
+
 char *source;
 Token tokens[2048];
 
@@ -59,13 +132,14 @@ char *node2s(Node *);
 void tokenize(void);
 
 /* parse.c */
-Token *get_token(void);
-void read_term(void);
-void read_mul_div(void);
-void read_add_sub(void);
-void read_eq_neq_assgin(void);
-void read_expr(void);
-void parse(void);
+void parse_init(void);
+Vector *parse_toplevel(void);
+
+/* analyze.c */
+void analyze_toplevel(Vector *);
+
+/* gen.c */
+void emit_toplevel(Vector *);
 
 /* test.c */
 int test_vector(void);

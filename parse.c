@@ -1,201 +1,292 @@
 #include "minc.h"
 
-static void func_prologue(void);
-static void func_epilogue(void);
+static int tokscmp(Token*, char *);
+static Token *next(void);
+static Node *read_lvar(void);
+static Node *read_func_call(void);
+static Node *read_ident(void);
+static Node *read_term(void);
+static Node *read_mul_div(void);
+static Node *read_add_sub(void);
+static Node *read_expr(void);
+static Node *read_comp_stmt(void);
+static Node *read_func(void);
 
-char *registers[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+static Token *token;
 
-Token *get_token(void) { return ++token; }
+static Token *next(void) { return ++token; }
 
-void read_term(void) {
-  if ((token + 1)->type == TOPENPARENTHESIS) {
-    token = get_token();
-    read_add_sub();
-    token = get_token();
-    if (token->type != TCLOSEPARENTHESIS)
+static int tokscmp(Token *tok, char *string) {
+  if (tok->type == TIDENT || tok->type == TPUNCTUATOR) {
+    if (!strcmp(tok->sval, string))
+      return 1;
+  }
+
+  return 0;
+}
+
+static Node *read_lvar(void) {
+  if ((token + 1)->type != TIDENT) {
+    error("TIDENT expected");
+    return NULL;
+  }
+
+  token = next();
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_LVAR;
+  node->var_name = token->sval;
+
+  return node;
+}
+
+static Node *read_func_call(void) {
+  if (!((token + 1)->type == TIDENT && tokscmp((token + 2), "("))) {
+    error("TIDENT ( expected");
+    return NULL;
+  }
+
+  token = next();
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_FUNC_CALL;
+  node->func_name = token->sval;
+  node->arguments = vector_new();
+  token = next();
+
+  int idx = 0;
+  Node *expr = read_expr();
+  if (expr->type == AST_EXPR && expr->expr->type != UNK) {
+    vector_push(node->arguments, expr);
+    idx++;
+  }
+
+  while (tokscmp((token + 1), ",")) {
+    token = next();
+
+    expr = read_expr();
+    if (expr->type == AST_EXPR && expr->expr->type != UNK) {
+      vector_push(node->arguments, expr);
+      idx++;
+    } else
+      break;
+  }
+
+  if (!tokscmp((token + 1), ")"))
+    error(") expected");
+  token = next();
+
+  return node;
+}
+
+static Node *read_ident(void) {
+  if (!((token + 1)->type == TIDENT)) {
+    error("TIDENT expected");
+    return NULL;
+  }
+
+  if (tokscmp((token + 2), "("))
+    return read_func_call();
+  else
+    return read_lvar();
+}
+
+static Node *read_term(void) {
+  Node *node = malloc(sizeof(Node));
+
+  if (tokscmp((token + 1), "(")) {
+    token = next();
+    node = read_expr();
+    if (!tokscmp((token + 1), ")"))
       error(") expected");
+    token = next();
   } else if ((token + 1)->type == TNUMBER) {
-    token = get_token();
-    printf("\tmovl $%d, %%eax\n", token->int_value);
-  } else if ((token + 1)->type == TIDENTIFIER) {
-    token = get_token();
-
-    if ((token + 1)->type == TOPENPARENTHESIS) {
-      char *func = token->identifier;
-      token = get_token();
-
-      int i = 0;
-      while ((token + 1)->type != TCLOSEPARENTHESIS) {
-        if (i > 0) {
-          if ((token + 1)->type != TCOMMA)
-            error(", expected");
-          token = get_token();
-        }
-        read_expr();
-        printf("\tmov %%rax, %%%s\n", registers[i]);
-        i++;
-      }
-      token = get_token();
-      if (token->type != TCLOSEPARENTHESIS)
-        error(") expected");
-      printf("\tcall %s\n", func);
-    } else {
-      long offset = (long)map_get(ident, token->identifier);
-      if (!offset)
-        error("variable expected");
-      printf("\tleaq %ld(%%rbp), %%rax\n", offset);
-    }
+    token = next();
+    node->type = AST_LITERAL;
+    node->int_value = atoi(token->sval);
+  } else if ((token + 1)->type == TIDENT) {
+    node = read_ident();
   }
+
+  return node;
 }
 
-void read_mul_div(void) {
-  read_term();
+static Node *read_mul_div(void) {
+  Node *node = read_term();
 
-  while ((token + 1)->type == TMUL || (token + 1)->type == TDIV) {
-    token = get_token();
-    TokenType op = token->type;
-    printf("\tpushq %%rax\n");
-    read_term();
-    printf("\tmov %%rax, %%rdi\n");
-    printf("\tpop %%rax\n");
+  while (tokscmp((token + 1), "*") || tokscmp((token + 1), "/")) {
+    Node *tmp = malloc(sizeof(Node));
+    tmp->left = node;
+    token = next();
 
-    if (op == TMUL) {
-      printf("\tmul %%edi\n");
-    } else if (op == TDIV) {
-      printf("\tcqto\n");
-      printf("\tdiv %%edi\n");
-    }
+    if (tokscmp(token, "*"))
+      tmp->type = OP_MUL;
+    else if (tokscmp(token, "/"))
+      tmp->type = OP_DIV;
+
+    tmp->right = read_term();
+    
+    node = tmp;
   }
+
+  return node;
 }
 
-void read_add_sub(void) {
-  read_mul_div();
+static Node *read_add_sub(void) {
+  Node *node = read_mul_div();
 
-  while ((token + 1)->type == TADD || (token + 1)->type == TSUB) {
-    token = get_token();
-    TokenType op = token->type;
-    printf("\tpushq %%rax\n");
-    read_mul_div();
-    printf("\tmov %%rax, %%rdi\n");
-    printf("\tpop %%rax\n");
+  while (tokscmp((token + 1), "+") || tokscmp((token + 1), "-")) {
+    Node *tmp = malloc(sizeof(Node));
+    tmp->left = node;
+    token = next();
 
-    if (op == TADD)
-      printf("\taddl %%edi, %%eax\n");
-    else if (op == TSUB) {
-      printf("\tsubl %%edi, %%eax\n");
-    }
+    if (tokscmp(token, "+"))
+      tmp->type = OP_ADD;
+    else if (tokscmp(token, "-"))
+      tmp->type = OP_SUB;
+
+    tmp->right = read_mul_div();
+
+    node = tmp;
   }
+
+  return node;
 }
 
-void read_eq_neq_assgin(void) {
-  read_add_sub();
+static Node *read_eq_and_neq(void) {
+  Node *node = read_add_sub();
 
-  while ((token + 1)->type == TEQ || (token + 1)->type == TNEQ ||
-         (token + 1)->type == TASSIGN) {
-    token = get_token();
-    TokenType op = token->type;
-    printf("\tpushq %%rax\n");
-    read_add_sub();
-    printf("\tmov %%rax, %%rdi\n");
-    printf("\tpop %%rax\n");
+  while (tokscmp((token + 1), "==") || tokscmp((token + 1), "!=")) {
+    Node *tmp = malloc(sizeof(Node));
+    tmp->left = node;
+    token = next();
 
-    if (op == TEQ || op == TNEQ) {
-      printf("\tcmpl %%eax, %%edi\n");
-      if (op == TEQ) {
-        printf("\tsete %%al\n");
-      } else if (op == TNEQ) {
-        printf("\tsetne %%al\n");
-      }
-      printf("\tmovzbl %%al, %%eax\n");
-    } else if (op == TASSIGN) {
-      printf("\tmovl %%edi, (%%rax)\n");
-    }
+    if (tokscmp(token, "=="))
+      tmp->type = OP_EQ;
+    else if (tokscmp(token, "!="))
+      tmp->type = OP_NEQ;
+
+    tmp->right = read_add_sub();
+
+    node = tmp;
   }
+
+  return node;
 }
 
-void read_expr(void) {
-  read_eq_neq_assgin();
+static Node *read_assgin(void) {
+  Node *node = read_eq_and_neq();
 
-  while ((token + 1)->type == TSEMICOLON) {
-    token = get_token();
-    read_eq_neq_assgin();
+  while (tokscmp((token + 1), "=")) {
+    Node *tmp = malloc(sizeof(Node));
+    tmp->left = node;
+    token = next();
+
+    tmp->type = OP_ASSGIN;
+
+    tmp->right = read_eq_and_neq();
+
+    node = tmp;
   }
+
+  return node;
 }
 
-void read_func(void) {
-  if ((token + 1)->type == TIDENTIFIER) {
-    token = get_token();
-    char *func_name = token->identifier;
-    if ((token + 1)->type != TOPENPARENTHESIS)
-      error("( expected");
-    token = get_token();
-    if ((token + 1)->type != TCLOSEPARENTHESIS)
-      error(") expected");
-    token = get_token();
+static Node *read_expr(void) {
+  Node *node = malloc(sizeof(Node));
 
-    printf("%s:\n", func_name);
-
-    if ((token + 1)->type != TOPENBRACE)
-      error("{ expected");
-    token = get_token();
-
-    func_prologue();
-
-    while (1) {
-      if ((token + 1)->type == TCLOSEBRACE || (token + 1)->type == TRETURN)
-        break;
-      read_expr();
-    }
-
-    func_epilogue();
-  }
-}
-
-static void func_prologue(void) {
-  printf("\tpush %%rbp\n");
-  printf("\tmov %%rsp, %%rbp\n");
-
-  Vector *ident_keys = map_keys(ident);
-  for (int i = 0; i < vector_size(ident_keys); i++) {
-    map_push(ident, vector_get(ident_keys, i), (void *)(rbp_offset - 8));
-    printf("\tmovl $8, %%edi\n");
-    printf("\tsub %%rdi, %%rsp\n");
-    rbp_offset -= 8;
-  }
-}
-
-static void func_epilogue(void) {
-  if ((token + 1)->type == TRETURN) {
-    token = get_token();
-    read_expr();
-  }
-
-  for (int i = 0; i < map_size(ident); i++) {
-    rbp_offset += 8;
-    printf("\tmovl $8, %%edi\n");
-    printf("\tadd %%rdi, %%rsp\n");
-  }
-
-  if ((token + 1)->type != TCLOSEBRACE)
-    error("} expected");
-  token = get_token();
-
-  printf("\tpop %%rbp\n");
-
-  printf("\tret\n");
-}
-
-void parse(void) {
-  if ((token + 1)->type == TTESTVECTOR) {
-    printf("main:\n");
-    int res = test_vector();
-    printf("\tmovl $%d, %%eax\n", res);
-  } else if ((token + 1)->type == TTESTMAP) {
-    printf("main:\n");
-    int res = test_map();
-    printf("\tmovl $%d, %%eax\n", res);
+  if ((token + 1)->id == KRETURN) {
+    token = next();
+    node->type = AST_RETURN;
+    node->retval = read_expr();
   } else {
-    while ((token + 1)->type != TEOF)
-      read_func();
+    node->type = AST_EXPR;
+    node->expr = read_assgin();
   }
+
+  return node;
+}
+
+static Node *read_comp_stmt(void) {
+  if (!tokscmp((token + 1), "{"))
+    error("{ expected");
+  token = next();
+
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_COMP_STMT;
+  node->stmts = vector_new();
+
+  Node *expr = read_expr();
+  if ((expr->type == AST_EXPR && expr->expr->type != UNK)
+          || expr->type == AST_RETURN)
+    vector_push(node->stmts, expr);
+
+  while (tokscmp((token + 1), ";")) {
+    token = next();
+
+    expr = read_expr();
+    if ((expr->type == AST_EXPR && expr->expr->type != UNK)
+            || expr->type == AST_RETURN)
+      vector_push(node->stmts, expr);
+  }
+
+  if (!tokscmp((token + 1), "}"))
+    error("} expected");
+  token = next();
+
+  return node;
+}
+
+static Node *read_func(void) {
+  if ((token + 1)->type != TIDENT)
+    error("TIDENT expected");
+
+  token = next();
+  char *func_name = token->sval;
+
+  if (!tokscmp((token + 1), "("))
+    error("( expected");
+  token = next();
+
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_FUNC;
+  node->func_name = func_name;
+  node->arguments = vector_new();
+
+  int idx = 0;
+  Node *expr = read_expr();
+  if (expr->type == AST_EXPR && expr->expr->type != UNK) {
+    vector_push(node->arguments, expr);
+    idx++;
+  }
+
+  while (tokscmp((token + 1), ",")) {
+    token = next();
+
+    expr = read_expr();
+    if (expr->type == AST_EXPR && expr->expr->type != UNK) {
+      vector_push(node->arguments, expr);
+      idx++;
+    } else
+      break;
+  }
+
+  if (!tokscmp((token + 1), ")"))
+    error(") expected");
+  token = next();
+
+
+  node->body = read_comp_stmt();
+
+  return node;
+}
+
+void parse_init(void) {
+  token = tokens - 1;
+}
+
+Vector *parse_toplevel(void) {
+  Vector *toplevels = vector_new();
+  while ((token + 1)->type != TEOF)
+    vector_push(toplevels, read_func());
+
+  return toplevels;
 }
