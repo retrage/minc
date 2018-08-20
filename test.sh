@@ -42,7 +42,7 @@ runtest "main() { return 64+32; }" 96
 # step 2.2
 runtest "main() { return 2-1; }" 1
 runtest "main() { return 1-1; }" 0
-runtest "main() { reutnr 64-32; }" 32
+runtest "main() { return 64-32; }" 32
 
 # step 2.3
 runtest "main() { return 3*5; }" 15
