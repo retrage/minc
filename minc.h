@@ -51,9 +51,9 @@ Vector *map_keys(Map *);
 
 /* debug.c */
 void error(char *, ...);
-char *dump_token(Token *);
+char *tok2s(Token *);
 void dump_tokens(void);
-void dump_map(Map *);
+char *node2s(Node *);
 
 /* lex.c */
 void tokenize(void);
