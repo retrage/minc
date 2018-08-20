@@ -6,33 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef enum {
-  TEOF,
-  TNUMBER,
-  TADD,
-  TSUB,
-  TMUL,
-  TDIV,
-  TOPENPARENTHESIS,
-  TCLOSEPARENTHESIS,
-  TEQ,
-  TNEQ,
-  TSEMICOLON,
-  TIDENTIFIER,
-  TASSIGN,
-  TCOMMA,
-  TOPENBRACE,
-  TCLOSEBRACE,
-  TRETURN,
-  TTESTVECTOR,
-  TTESTMAP,
-} TokenType;
-
 typedef struct {
-  TokenType type;
-  int int_value;
-  char identifier[1024];
-} Token;
+  int len;
+  int buf_len;
+  char *buf;
+} Buffer;
 
 typedef struct {
   int vec_len;
@@ -47,10 +25,16 @@ typedef struct {
 } Map;
 
 char *source;
-Token tokens[100];
-Token *token;
-Map *ident;
-long rbp_offset;
+Token tokens[2048];
+
+/* buffer.c */
+Buffer *buffer_new(void);
+void buffer_write(Buffer *, char);
+void buffer_append(Buffer *, char *, int);
+char *buffer_body(Buffer *buf);
+size_t buffer_size(Buffer *);
+char *vformat(char *, va_list);
+char *format(char *, ...);
 
 /* vector.c */
 Vector *vector_new(void);
