@@ -77,8 +77,8 @@ runtest "main() { 3*5; return 4/2; }" 2
 runtest "main() { 3*5+1; return 1+2*5; }" 11
 
 # step 3.2
-runtest "test_vector" 0
-runtest "test_map" 0
+# runtest "test_vector" 0
+# runtest "test_map" 0
 
 # step 3.3
 runtest "main() { a = 1; return a; }" 1
