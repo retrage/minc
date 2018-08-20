@@ -1,4 +1,4 @@
-CFLAGS=-Wall -std=c11
+CFLAGS=-Wall -std=c11 -g -O0
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o)
 TARGET=minc
