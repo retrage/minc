@@ -8,13 +8,16 @@ static void emit_func_call(Node *);
 static void emit_literal(Node *);
 static void emit_lvar(Node *);
 static void emit_return(Node *);
+static void emit_lvalue(Node *);
+static void emit_rvalue(Node *);
+static void emit_assgin(Node *);
 static void emit_op(Node *);
 static void emit_expr(Node *);
 static void emit_comp_stmt(Node *);
 static void emit_func_prologue(Node *);
 static void emit_func_epilogue(Node *);
 
-char *lregs[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
+char *qregs[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
 
 static void emit_func_call(Node *node) {
   if (node->type != AST_FUNC_CALL)
@@ -22,7 +25,7 @@ static void emit_func_call(Node *node) {
 
   for (int i = 0; i < vector_size(node->arguments); i++) {
     emit_expr(vector_get(node->arguments, i));
-    printf("\tmov %%rax, %%%s\n", lregs[i]);
+    printf("\tmov %%rax, %%%s\n", qregs[i]);
   }
 
   printf("\tcall %s\n", node->func_name);
@@ -40,13 +43,40 @@ static void emit_lvar(Node *node) {
     error("internal error #3");
 
   printf("\tleaq %ld(%%rbp), %%rax\n", node->offset);
+  printf("\tmovq (%%rax), %%rax\n");
 }
 
 static void emit_return(Node *node) {
   if (node->type != AST_RETURN)
     error("internal error #4");
 
-  emit_expr(node->retval);
+  emit_rvalue(node->retval);
+}
+
+static void emit_lvalue(Node *node) {
+  if (node->type != AST_LVAR)
+    error("lvalue must be lvar");
+
+  printf("\tleaq %ld(%%rbp), %%rax\n", node->offset);
+}
+
+static void emit_rvalue(Node *node) {
+  emit_expr(node);
+}
+
+static void emit_assgin(Node *node) {
+  if (node->type != OP_ASSGIN)
+    error("internal error #5.5");
+
+  emit_lvalue(node->left);
+  printf("\tpush %%rax\n");
+  emit_rvalue(node->right);
+  printf("\tpush %%rax\n");
+
+  printf("\tpop %%rdi\n");
+  printf("\tpop %%rax\n");
+
+  printf("\tmovl %%edi, (%%rax)\n");
 }
 
 static void emit_op(Node *node) {
@@ -91,10 +121,7 @@ static void emit_op(Node *node) {
 }
 
 static void emit_expr(Node *node) {
-  if (node->type == AST_RETURN) {
-    emit_expr(node->retval);
-    return;
-  } else if (node->type == AST_EXPR) {
+  if (node->type == AST_EXPR) {
     emit_expr(node->expr);
     return;
   }
@@ -108,11 +135,11 @@ static void emit_expr(Node *node) {
     case AST_RETURN:    emit_return(node);    break;
     case OP_EQ:
     case OP_NEQ:
-    case OP_ASSGIN:
     case OP_ADD:
     case OP_SUB:
     case OP_MUL:
     case OP_DIV:        emit_op(node);          break;
+    case OP_ASSGIN:     emit_assgin(node);      break;
     default:            error("internal error #6");
   }
 }
