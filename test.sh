@@ -96,5 +96,11 @@ calltest "main() { hog((4-2)*(5+1) != (4+8)/3, 5); return 0; }" "test4-1-4" "5"
 
 # step 4.2
 runtest "foo() { return 5; } main() { return foo(); }" 5
+runtest "foo() { return 5; } main() { return foo() + 10; }" 15
+runtest "foo() { a = 1; b = 2; return a + b; } main() { return foo() + 10; }" 13
+runtest "foo() { a = 1; b = 2; return a + b; } main() { a = 3; b = 4; return foo() * a + b; }" 13
+runtest "foo(a) { return a; } main() { return foo(1); }" 1
+runtest "foo(a, b) { c = 3; return a + b + c; } main() { a = 1; b = 2; return foo(a, b); }" 6
+runtest "many_args(foo, bar, baz, hog, fuz, hug) { baz = bar + foo * baz; hog = fuz - hug / hog; return baz + hog; } main() { return many_args(1, 2, 3, 4, 5, 6); }" 9
 
 echo OK

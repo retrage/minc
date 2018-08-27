@@ -23,6 +23,7 @@ static void emit_func_call(Node *node) {
   if (node->type != AST_FUNC_CALL)
     error("internal error #1");
 
+  /* FIXME: Number of arguments must be less than 6 */
   for (int i = 0; i < vector_size(node->arguments); i++) {
     emit_expr(vector_get(node->arguments, i));
     printf("\tmov %%rax, %%%s\n", qregs[i]);
@@ -162,10 +163,19 @@ static void emit_func_prologue(Node *node) {
   printf("\tpush %%rbp\n");
   printf("\tmov %%rsp, %%rbp\n");
 
-  long offset = 8 * map_size(node->env);
+  long offset;
+
+  offset = 8 * map_size(node->env);
   if (offset > 0) {
-    printf("\tmovl $%ld, %%edi\n", offset);
-    printf("\tsub %%rdi, %%rsp\n");
+    printf("\tmovl $%ld, %%r10d\n", offset);
+    printf("\tsub %%r10, %%rsp\n");
+  }
+
+  Node *arg;
+  for (int i = 0; i < vector_size(node->arguments); i++) {
+    arg = vector_get(node->arguments, i);
+    offset = (long)map_get(node->env, arg->expr->var_name);
+    printf("\tmov %%%s, %ld(%%rbp)\n", qregs[i], offset);
   }
 }
 
