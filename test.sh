@@ -83,7 +83,7 @@ runtest "main() { 3*5+1; return 1+2*5; }" 11
 # step 3.3
 runtest "main() { a = 1; return a; }" 1
 runtest "main() { b = 1 + 2; return b; }" 3
-runtest "main() { a = 1; b = 2; return a + b; }" 2
+runtest "main() { a = 1; b = 2; return a + b; }" 3
 runtest "main() { a = 1 * (2 + 3); b = (7 - 1) / 2; return b; }" 3
 runtest "main() { a = 1 * (2 + 3); b = (7 - 1) / 2; return a * b; }" 15
 
