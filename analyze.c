@@ -12,6 +12,10 @@ static void analyze_func_call(Node *node, Map *env) {
   if (node->type != AST_FUNC_CALL)
     error("internal error");
 
+  if (vector_size(node->arguments) > 6)
+    error("too many arguments");
+
+  /* FIXME: check number of arguments */
   for (int i = 0; i < vector_size(node->arguments); i++) {
     Node *arg = vector_get(node->arguments, i);
     analyze_expr(arg, env);
@@ -93,11 +97,14 @@ static void analyze_func(Node *node, Map *env) {
   if (node->type != AST_FUNC)
     error("internal error");
 
+  if (vector_size(node->arguments) > 6)
+    error("too many arguments");
+
   long offset = 0;
-  for (int i = vector_size(node->arguments) - 1; i >= 0; i--) {
+  for (int i = 0; i < vector_size(node->arguments); i++) {
     Node *arg = vector_get(node->arguments, i);
     if (arg->type != AST_EXPR || arg->expr->type != AST_LVAR)
-      error("invalid parameter");
+      error("invalid parameter %s", node2s(arg));
 
     /* FIXME: calculate offset by size of type */
     offset -= 8;
