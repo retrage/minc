@@ -26,7 +26,7 @@ static int label(void) { return ++label_idx; }
 
 static void emit_if(Node *node) {
   if (node->type != AST_IF)
-    error("internal error #0");
+    error("internal error");
 
   emit_expr(node->cond);
 
@@ -52,7 +52,7 @@ static void emit_if(Node *node) {
 
 static void emit_func_call(Node *node) {
   if (node->type != AST_FUNC_CALL)
-    error("internal error #1");
+    error("internal error");
 
   /* FIXME: Number of arguments must be less than 6 */
   for (int i = 0; i < vector_size(node->arguments); i++) {
@@ -65,14 +65,14 @@ static void emit_func_call(Node *node) {
 
 static void emit_literal(Node *node) {
   if (node->type != AST_LITERAL)
-    error("internal error #2");
+    error("internal error");
 
   printf("\tmovl $%d, %%eax\n", node->int_value);
 }
 
 static void emit_lvar(Node *node) {
   if (node->type != AST_LVAR)
-    error("internal error #3");
+    error("internal error");
 
   printf("\tleaq %ld(%%rbp), %%rax\n", node->offset);
   printf("\tmovq (%%rax), %%rax\n");
@@ -80,7 +80,7 @@ static void emit_lvar(Node *node) {
 
 static void emit_return(Node *node) {
   if (node->type != AST_RETURN)
-    error("internal error #4");
+    error("internal error");
 
   emit_rvalue(node->retval);
 }
@@ -98,7 +98,7 @@ static void emit_rvalue(Node *node) {
 
 static void emit_assgin(Node *node) {
   if (node->type != OP_ASSGIN)
-    error("internal error #5.5");
+    error("internal error");
 
   emit_lvalue(node->left);
   printf("\tpush %%rax\n");
@@ -148,7 +148,7 @@ static void emit_op(Node *node) {
       printf("\tdiv %%edi\n");
       break;
     default:
-      error("internal error #5");
+      error("internal error");
   }
 }
 
@@ -173,13 +173,13 @@ static void emit_expr(Node *node) {
     case OP_MUL:
     case OP_DIV:        emit_op(node);          break;
     case OP_ASSGIN:     emit_assgin(node);      break;
-    default:            error("internal error #6");
+    default:            error("internal error");
   }
 }
 
 static void emit_comp_stmt(Node *node)  {
   if (node->type != AST_COMP_STMT)
-    error("internal error #7");
+    error("internal error");
 
   for (int i = 0; i < vector_size(node->stmts); i++)
     emit_expr(vector_get(node->stmts, i));
