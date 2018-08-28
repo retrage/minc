@@ -157,10 +157,8 @@ static Node *read_while(void) {
 
   if (tokscmp((token + 1), "{"))
     node->then = read_comp_stmt();
-  else {
+  else
     node->then = read_expr();
-    //token = next(); /* read ; */
-  }
 
   node->els = NULL;
 

@@ -5,6 +5,7 @@
  */
 
 static void emit_if(Node *);
+static void emit_while(Node *);
 static void emit_func_call(Node *);
 static void emit_literal(Node *);
 static void emit_lvar(Node *);
@@ -46,6 +47,27 @@ static void emit_if(Node *node) {
     emit_expr(node->els);
     printf("\tjmp .L%d\n", label_end);
   }
+
+  printf(".L%d:\n", label_end);
+}
+
+static void emit_while(Node *node) {
+  if (node->type != AST_WHILE)
+    error("internal error");
+
+  int label_begin = label();
+  int label_end = label();
+
+  printf(".L%d:\n", label_begin);
+
+  emit_expr(node->cond);
+
+  printf("\tcmp $0, %%rax\n");
+  printf("\tje .L%d\n", label_end);
+
+  emit_expr(node->then);
+
+  printf("\tjmp .L%d\n", label_begin);
 
   printf(".L%d:\n", label_end);
 }
@@ -166,13 +188,14 @@ static void emit_expr(Node *node) {
     case AST_EXPR:      emit_expr(node);      break;
     case AST_RETURN:    emit_return(node);    break;
     case AST_IF:        emit_if(node);        break;
+    case AST_WHILE:     emit_while(node);     break;
     case OP_EQ:
     case OP_NEQ:
     case OP_ADD:
     case OP_SUB:
     case OP_MUL:
-    case OP_DIV:        emit_op(node);          break;
-    case OP_ASSGIN:     emit_assgin(node);      break;
+    case OP_DIV:        emit_op(node);        break;
+    case OP_ASSGIN:     emit_assgin(node);    break;
     default:            error("internal error");
   }
 }

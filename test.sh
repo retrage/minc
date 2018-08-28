@@ -111,5 +111,7 @@ runtest "foo(a, b) { if (a == b) res = 1; else res = 0; return res; } main() { r
 runtest "foo(a, b) { if (a == b) res = 1; else { res = 0; } return res; } main() { return foo(1, 2); }" 0
 runtest "foo(a, b) { if (a == b) { res = 1; } else res = 0; return res; } main() { return foo(1, 2); }" 0
 runtest "foo(a, b) { if (a == b) { res = 1; } else { res = 0; } return res; } main() { return foo(1, 2); }" 0
+runtest "main() { a = 0; while (a != 10) { a = a + 1; } return a; }" 10
+runtest "main() { a = 10; while (a != 0) { a = a - 1; } return a; }" 0
 
 echo OK
