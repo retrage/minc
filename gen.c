@@ -22,6 +22,7 @@ static void emit_func_epilogue(Node *);
 
 const char *qregs[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
 
+static int ret_label = 0;
 static int label_idx = 0;
 
 static int label(void) { return ++label_idx; }
@@ -127,6 +128,8 @@ static void emit_return(Node *node) {
     error("internal error");
 
   emit_rvalue(node->retval);
+
+  printf("\tjmp .L%d\n", ret_label);
 }
 
 static void emit_lvalue(Node *node) {
@@ -259,6 +262,8 @@ static void emit_func_prologue(Node *node) {
 static void emit_func_epilogue(Node *node) {
   if (node->type != AST_FUNC)
     error("internal error");
+
+  printf(".L%d:\n", ret_label);
 
   long offset = 8 * map_size(node->env);
   if (offset > 0) {
