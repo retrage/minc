@@ -86,6 +86,10 @@ char *node2s(Node *node) {
     case AST_WHILE:
       return format("(while cond=%s then=%s)",
               node2s(node->cond), node2s(node->then));
+    case AST_FOR:
+      return format("(for init=%s cond=%s incdec=%s then=%s)",
+              node2s(node->init), node2s(node->cond),
+              node2s(node->incdec), node2s(node->then));
     case OP_EQ:
     case OP_NEQ:
     case OP_ASSGIN:

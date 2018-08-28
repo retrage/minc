@@ -136,6 +136,9 @@ static Node *read_if(void) {
     node->els = NULL;
   }
 
+  node->init = NULL;
+  node->incdec = NULL;
+
   return node;
 }
 
@@ -158,15 +161,43 @@ static Node *read_while(void) {
   if (tokscmp((token + 1), "{"))
     node->then = read_comp_stmt();
   else
-    node->then = read_expr();
+    node->then = comp_stmt_from_expr();
 
+  node->init = NULL;
+  node->incdec = NULL;
   node->els = NULL;
 
   return node;
 }
 
 static Node *read_for(void) {
-  return NULL;
+  if (!((token + 1)->id == KFOR && tokscmp((token + 2), "("))) {
+    error("for ( expected");
+    return NULL;
+  }
+
+  token = next(); /* read "for" */
+  token = next(); /* read "(" */
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_FOR;
+  node->init = read_expr();
+  token = next(); /* read ";" */
+  node->cond = read_expr();
+  token = next(); /* read ";" */
+  node->incdec = read_expr();
+
+  if (!tokscmp((token + 1), ")"))
+    error(") expected");
+  token = next();
+
+  if (tokscmp((token + 1), "{"))
+    node->then = read_comp_stmt();
+  else
+    node->then = comp_stmt_from_expr();
+
+  node->els = NULL;
+
+  return node;
 }
 
 static Node *read_ident(void) {

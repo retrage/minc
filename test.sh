@@ -113,5 +113,7 @@ runtest "foo(a, b) { if (a == b) { res = 1; } else res = 0; return res; } main()
 runtest "foo(a, b) { if (a == b) { res = 1; } else { res = 0; } return res; } main() { return foo(1, 2); }" 0
 runtest "main() { a = 0; while (a != 10) { a = a + 1; } return a; }" 10
 runtest "main() { a = 10; while (a != 0) { a = a - 1; } return a; }" 0
+runtest "main() { b = 0; for (a = 0; a != 10; a = a + 1) { b = b + 2; } return b; }" 20
+runtest "main() { b = 0; for (a = 0; a != 10; a = a + 1) b = b + 2; return b; }" 20
 
 echo OK

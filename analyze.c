@@ -45,6 +45,11 @@ static void analyze_while(Node *node, Map *env) {
 static void analyze_for(Node *node, Map *env) {
   if (node->type != AST_FOR)
     error("internal error");
+
+  analyze_expr(node->init, env);
+  analyze_expr(node->cond, env);
+  analyze_expr(node->incdec, env);
+  analyze_comp_stmt(node->then, env);
 }
 
 static void analyze_literal(Node *node, Map *env) {

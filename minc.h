@@ -101,9 +101,11 @@ typedef struct Node {
     struct Node *retval;
     /* Expression */
     struct Node *expr;
-    /* If statement and While */
+    /* If statement, While, For */
     struct {
+      struct Node *init;
       struct Node *cond;
+      struct Node *incdec;
       struct Node *then;
       struct Node *els;
     };
