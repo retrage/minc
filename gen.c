@@ -4,6 +4,7 @@
  * The result of operations are remained in rax registers.
  */
 
+static void emit_if(Node *);
 static void emit_func_call(Node *);
 static void emit_literal(Node *);
 static void emit_lvar(Node *);
@@ -17,7 +18,37 @@ static void emit_comp_stmt(Node *);
 static void emit_func_prologue(Node *);
 static void emit_func_epilogue(Node *);
 
-char *qregs[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
+const char *qregs[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
+
+static int label_idx = 0;
+
+static int label(void) { return ++label_idx; }
+
+static void emit_if(Node *node) {
+  if (node->type != AST_IF)
+    error("internal error #0");
+
+  emit_expr(node->cond);
+
+  int label_then = label();
+  int label_els = label();
+  int label_end = label();
+  printf("\tcmp $0, %%rax\n");
+  printf("\tje .L%d\n", label_els);
+  printf("\tjmp .L%d\n", label_then);
+
+  printf(".L%d:\n", label_then);
+  emit_expr(node->then);
+  printf("\tjmp .L%d\n", label_end);
+
+  printf(".L%d:\n", label_els);
+  if (node->els) {
+    emit_expr(node->els);
+    printf("\tjmp .L%d\n", label_end);
+  }
+
+  printf(".L%d:\n", label_end);
+}
 
 static void emit_func_call(Node *node) {
   if (node->type != AST_FUNC_CALL)
@@ -134,6 +165,7 @@ static void emit_expr(Node *node) {
     case AST_LVAR:      emit_lvar(node);      break;
     case AST_EXPR:      emit_expr(node);      break;
     case AST_RETURN:    emit_return(node);    break;
+    case AST_IF:        emit_if(node);        break;
     case OP_EQ:
     case OP_NEQ:
     case OP_ADD:
@@ -164,7 +196,6 @@ static void emit_func_prologue(Node *node) {
   printf("\tmov %%rsp, %%rbp\n");
 
   long offset;
-
   offset = 8 * map_size(node->env);
   if (offset > 0) {
     printf("\tmovl $%ld, %%r10d\n", offset);

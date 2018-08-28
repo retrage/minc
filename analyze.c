@@ -1,6 +1,9 @@
 #include "minc.h"
 
 static void analyze_func_call(Node *, Map *);
+static void analyze_if(Node *, Map *);
+static void analyze_while(Node *, Map *);
+static void analyze_for(Node *, Map *);
 static void analyze_literal(Node *, Map *);
 static void analyze_lvar(Node *, Map *);
 static void analyze_op(Node *, Map *);
@@ -20,6 +23,25 @@ static void analyze_func_call(Node *node, Map *env) {
     Node *arg = vector_get(node->arguments, i);
     analyze_expr(arg, env);
   }
+}
+
+static void analyze_if(Node *node, Map *env) {
+  if (node->type != AST_IF)
+    error("internal error");
+
+  analyze_expr(node->cond, env);
+  analyze_comp_stmt(node->then, env);
+  if (node->els)
+    analyze_comp_stmt(node->els, env);
+}
+
+static void analyze_while(Node *node, Map *env) {
+  if (node->type != AST_WHILE)
+    error("internal error");
+}
+static void analyze_for(Node *node, Map *env) {
+  if (node->type != AST_FOR)
+    error("internal error");
 }
 
 static void analyze_literal(Node *node, Map *env) {
@@ -80,6 +102,9 @@ static void analyze_expr(Node *node, Map *env) {
     case AST_LVAR:      analyze_lvar(node, env);      break;
     case AST_EXPR:      analyze_expr(node, env);      break;
     case AST_RETURN:    error("return must be unique in expr"); break;
+    case AST_IF:        analyze_if(node, env);        break;
+    case AST_WHILE:     analyze_while(node, env);     break;
+    case AST_FOR:       analyze_for(node, env);       break;
     default:            analyze_op(node, env);
   }
 }

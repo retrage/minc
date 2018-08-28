@@ -80,6 +80,12 @@ char *node2s(Node *node) {
       return format("(expr %s)", node2s(node->expr));
     case AST_RETURN:
       return format("(return %s)", node2s(node->retval));
+    case AST_IF:
+      return format("(if cond=%s then=%s else=%s)",
+              node2s(node->cond), node2s(node->then), node2s(node->els));
+    case AST_WHILE:
+      return format("(while cond=%s then=%s)",
+              node2s(node->cond), node2s(node->then));
     case OP_EQ:
     case OP_NEQ:
     case OP_ASSGIN:

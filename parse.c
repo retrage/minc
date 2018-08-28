@@ -3,7 +3,11 @@
 static int tokscmp(Token*, char *);
 static Token *next(void);
 static Node *read_lvar(void);
+static Node *read_return(void);
 static Node *read_func_call(void);
+static Node *read_if(void);
+static Node *read_while(void);
+static Node *read_for(void);
 static Node *read_ident(void);
 static Node *read_term(void);
 static Node *read_mul_div(void);
@@ -15,6 +19,16 @@ static Node *read_func(void);
 static Token *token;
 
 static Token *next(void) { return ++token; }
+
+static Node *comp_stmt_from_expr(void) {
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_COMP_STMT;
+  node->stmts = vector_new();
+  vector_push(node->stmts, read_expr());
+  token = next(); /* read ; */
+
+  return node;
+}
 
 static int tokscmp(Token *tok, char *string) {
   if (tok->type == TIDENT || tok->type == TPUNCTUATOR) {
@@ -35,6 +49,20 @@ static Node *read_lvar(void) {
   Node *node = malloc(sizeof(Node));
   node->type = AST_LVAR;
   node->var_name = token->sval;
+
+  return node;
+}
+
+static Node *read_return(void) {
+  if ((token + 1)->id != KRETURN) {
+    error("return expected");
+    return NULL;
+  }
+
+  token = next();
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_RETURN;
+  node->retval = read_expr();
 
   return node;
 }
@@ -75,6 +103,72 @@ static Node *read_func_call(void) {
   token = next();
 
   return node;
+}
+
+static Node *read_if(void) {
+  if (!((token + 1)->id == KIF && tokscmp((token + 2), "("))) {
+    error("if ( expected");
+    return NULL;
+  }
+
+  token = next(); /* read "if" */
+  token = next(); /* read "(" */
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_IF;
+  node->cond = read_expr();
+
+  if (!tokscmp((token + 1), ")"))
+    error(") expected");
+  token = next();
+
+  if (tokscmp((token + 1), "{"))
+    node->then = read_comp_stmt();
+  else
+    node->then = comp_stmt_from_expr();
+
+  if ((token + 1)->id == KELSE) {
+    token = next();
+    if (tokscmp((token + 1), "{"))
+      node->els = read_comp_stmt();
+    else
+      node->els = comp_stmt_from_expr();
+  } else {
+    node->els = NULL;
+  }
+
+  return node;
+}
+
+static Node *read_while(void) {
+  if (!((token + 1)->id == KWHILE && tokscmp((token + 2), "("))) {
+    error("while ( expected");
+    return NULL;
+  }
+
+  token = next(); /* read "while" */
+  token = next(); /* read "(" */
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_WHILE;
+  node->cond = read_expr();
+
+  if (!tokscmp((token + 1), ")"))
+    error(") expected");
+  token = next();
+
+  if (tokscmp((token + 1), "{"))
+    node->then = read_comp_stmt();
+  else {
+    node->then = read_expr();
+    //token = next(); /* read ; */
+  }
+
+  node->els = NULL;
+
+  return node;
+}
+
+static Node *read_for(void) {
+  return NULL;
 }
 
 static Node *read_ident(void) {
@@ -191,18 +285,20 @@ static Node *read_assgin(void) {
 }
 
 static Node *read_expr(void) {
-  Node *node = malloc(sizeof(Node));
-
   if ((token + 1)->id == KRETURN) {
-    token = next();
-    node->type = AST_RETURN;
-    node->retval = read_expr();
+    return read_return();
+  } else if ((token + 1)->id == KIF) {
+    return read_if();
+  } else if ((token + 1)->id == KWHILE) {
+    return read_while();
+  } else if ((token + 1)->id == KFOR) {
+    return read_for();
   } else {
+    Node *node = malloc(sizeof(Node));
     node->type = AST_EXPR;
     node->expr = read_assgin();
+    return node;
   }
-
-  return node;
 }
 
 static Node *read_comp_stmt(void) {
@@ -215,16 +311,18 @@ static Node *read_comp_stmt(void) {
   node->stmts = vector_new();
 
   Node *expr = read_expr();
-  if ((expr->type == AST_EXPR && expr->expr->type != UNK)
-          || expr->type == AST_RETURN)
+  if (expr->type == AST_EXPR && expr->expr->type == UNK) {
+    /* Do nothing */
+  } else
     vector_push(node->stmts, expr);
 
-  while (tokscmp((token + 1), ";")) {
+  while (tokscmp((token + 1), ";") || !tokscmp((token + 1), "}")) {
     token = next();
 
     expr = read_expr();
-    if ((expr->type == AST_EXPR && expr->expr->type != UNK)
-            || expr->type == AST_RETURN)
+    if (expr->type == AST_EXPR && expr->expr->type == UNK) {
+      /* Do nothing */
+    } else
       vector_push(node->stmts, expr);
   }
 

@@ -38,6 +38,10 @@ enum {
   KTESTVECTOR,
   KTESTMAP,
   KRETURN,
+  KIF,
+  KELSE,
+  KWHILE,
+  KFOR,
 };
 
 typedef struct {
@@ -55,6 +59,9 @@ enum {
   AST_LVAR,
   AST_EXPR,
   AST_RETURN,
+  AST_IF,
+  AST_WHILE,
+  AST_FOR,
   AST_TESTVECTOR,
   AST_TESTMAP,
   OP_EQ,
@@ -94,6 +101,12 @@ typedef struct Node {
     struct Node *retval;
     /* Expression */
     struct Node *expr;
+    /* If statement and While */
+    struct {
+      struct Node *cond;
+      struct Node *then;
+      struct Node *els;
+    };
   };
 } Node;
 

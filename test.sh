@@ -103,4 +103,13 @@ runtest "foo(a) { return a; } main() { return foo(1); }" 1
 runtest "foo(a, b) { c = 3; return a + b + c; } main() { a = 1; b = 2; return foo(a, b); }" 6
 runtest "many_args(foo, bar, baz, hog, fuz, hug) { baz = bar + foo * baz; hog = fuz - hug / hog; return baz + hog; } main() { return many_args(1, 2, 3, 4, 5, 6); }" 9
 
+# step 4.3
+runtest "main() { if (1) { a = 1; } return a; }" 1
+runtest "main() { a = 1; b = 2; if (a != b) { a = 3; } else { b = 4; } return a + b; }" 5
+runtest "foo(a) { if (a == 1) b = 1; return b; } main() { return foo(1); }" 1
+runtest "foo(a, b) { if (a == b) res = 1; else res = 0; return res; } main() { return foo(1, 2); }" 0
+runtest "foo(a, b) { if (a == b) res = 1; else { res = 0; } return res; } main() { return foo(1, 2); }" 0
+runtest "foo(a, b) { if (a == b) { res = 1; } else res = 0; return res; } main() { return foo(1, 2); }" 0
+runtest "foo(a, b) { if (a == b) { res = 1; } else { res = 0; } return res; } main() { return foo(1, 2); }" 0
+
 echo OK

@@ -91,6 +91,18 @@ static void read_string(void) {
         } else if (!strcmp(string, "return")) {
           tokens[token_pos].type = TKEYWORD;
           tokens[token_pos].id = KRETURN;
+        } else if (!strcmp(string, "if")) {
+          tokens[token_pos].type = TKEYWORD;
+          tokens[token_pos].id = KIF;
+        } else if (!strcmp(string, "else")) {
+          tokens[token_pos].type = TKEYWORD;
+          tokens[token_pos].id = KELSE;
+        } else if (!strcmp(string, "while")) {
+          tokens[token_pos].type = TKEYWORD;
+          tokens[token_pos].id = KWHILE;
+        } else if (!strcmp(string, "for")) {
+          tokens[token_pos].type = TKEYWORD;
+          tokens[token_pos].id = KFOR;
         } else {
           if (strlen(string) > 128)
             error("string too long");
