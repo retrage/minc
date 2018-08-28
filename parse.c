@@ -8,6 +8,7 @@ static Node *read_func_call(void);
 static Node *read_if(void);
 static Node *read_while(void);
 static Node *read_for(void);
+static Node *read_decl(void);
 static Node *read_ident(void);
 static Node *read_term(void);
 static Node *read_mul_div(void);
@@ -25,7 +26,7 @@ static Node *comp_stmt_from_expr(void) {
   node->type = AST_COMP_STMT;
   node->stmts = vector_new();
   vector_push(node->stmts, read_expr());
-  token = next(); /* read ; */
+  token = next(); /* read ";" */
 
   return node;
 }
@@ -200,6 +201,24 @@ static Node *read_for(void) {
   return node;
 }
 
+static Node *read_decl(void) {
+  /* FIXME: Allow other types */
+  if (!((token + 1)->type == TKEYWORD && (token + 1)->id == KINT)) {
+    error("int expected");
+    return NULL;
+  }
+  token = next();
+
+  if (!((token + 1)->type == TIDENT))
+    error("TINDENT expected");
+
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_DECL;
+  node->declvar = read_expr();
+
+  return node;
+}
+
 static Node *read_ident(void) {
   if (!((token + 1)->type == TIDENT)) {
     error("TIDENT expected");
@@ -322,6 +341,8 @@ static Node *read_expr(void) {
     return read_while();
   } else if ((token + 1)->id == KFOR) {
     return read_for();
+  } else if ((token + 1)->id == KINT) {
+    return read_decl();
   } else {
     Node *node = malloc(sizeof(Node));
     node->type = AST_EXPR;
@@ -364,10 +385,15 @@ static Node *read_comp_stmt(void) {
 }
 
 static Node *read_func(void) {
+  /* FIXME: Allow other types */
+  if (!((token + 1)->type == TKEYWORD && (token + 1)->id == KINT))
+    error("int expected");
+  token = next();
+
   if ((token + 1)->type != TIDENT)
     error("TIDENT expected");
-
   token = next();
+
   char *func_name = token->sval;
 
   if (!tokscmp((token + 1), "("))
@@ -379,6 +405,13 @@ static Node *read_func(void) {
   node->func_name = func_name;
   node->arguments = vector_new();
 
+  /* FIXME: Allow other types */
+  if (!tokscmp((token + 1), ")")) {
+    if (!((token + 1)->type == TKEYWORD && (token + 1)->id == KINT))
+      error("int expected");
+    token = next();
+  }
+
   int idx = 0;
   Node *expr = read_expr();
   if (expr->type == AST_EXPR && expr->expr->type != UNK) {
@@ -387,6 +420,11 @@ static Node *read_func(void) {
   }
 
   while (tokscmp((token + 1), ",")) {
+    token = next();
+
+    /* FIXME: Allow other types */
+    if (!((token + 1)->type == TKEYWORD && (token + 1)->id == KINT))
+      error("int expected");
     token = next();
 
     expr = read_expr();

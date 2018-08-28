@@ -4,6 +4,7 @@ static void analyze_func_call(Node *, Map *);
 static void analyze_if(Node *, Map *);
 static void analyze_while(Node *, Map *);
 static void analyze_for(Node *, Map *);
+static void analyze_decl(Node *, Map *);
 static void analyze_literal(Node *, Map *);
 static void analyze_lvar(Node *, Map *);
 static void analyze_op(Node *, Map *);
@@ -42,6 +43,7 @@ static void analyze_while(Node *node, Map *env) {
   analyze_expr(node->cond, env);
   analyze_comp_stmt(node->then, env);
 }
+
 static void analyze_for(Node *node, Map *env) {
   if (node->type != AST_FOR)
     error("internal error");
@@ -50,6 +52,22 @@ static void analyze_for(Node *node, Map *env) {
   analyze_expr(node->cond, env);
   analyze_expr(node->incdec, env);
   analyze_comp_stmt(node->then, env);
+}
+
+static void analyze_decl(Node *node, Map *env) {
+  if (node->type != AST_DECL)
+    error("internal error");
+
+  Node *declvar = node->declvar->expr;
+  Vector *lvars = map_keys(env);
+  for (int i = 0; i < vector_size(lvars); i++) {
+    if (!strcmp(declvar->var_name, vector_get(lvars, i)))
+      error("redeclaration of %s", declvar->var_name);
+  }
+
+  /* FIXME: calculate offset by size of type */
+  declvar->offset = -8 * (map_size(env) + 1);
+  map_push(env, declvar->var_name, (void *)declvar->offset);
 }
 
 static void analyze_literal(Node *node, Map *env) {
@@ -62,14 +80,10 @@ static void analyze_lvar(Node *node, Map *env) {
     error("internal error");
 
   long offset = (long)map_get(env, node->var_name);
-  if (offset) {
-    /* XXX: overwrite offset */
+  if (offset)
     node->offset = offset;
-  } else {
-    /* FIXME: calculate offset by size of type */
-    node->offset = -8 * (map_size(env) + 1);
-    map_push(env, node->var_name, (void *)node->offset);
-  }
+  else
+    error("%s undeclared", node->var_name);
 }
 
 static void analyze_op(Node *node, Map *env) {
@@ -113,6 +127,7 @@ static void analyze_expr(Node *node, Map *env) {
     case AST_IF:        analyze_if(node, env);        break;
     case AST_WHILE:     analyze_while(node, env);     break;
     case AST_FOR:       analyze_for(node, env);       break;
+    case AST_DECL:      analyze_decl(node, env);      break;
     default:            analyze_op(node, env);
   }
 }

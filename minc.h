@@ -42,6 +42,7 @@ enum {
   KELSE,
   KWHILE,
   KFOR,
+  KINT,
 };
 
 typedef struct {
@@ -62,6 +63,7 @@ enum {
   AST_IF,
   AST_WHILE,
   AST_FOR,
+  AST_DECL,
   AST_TESTVECTOR,
   AST_TESTMAP,
   OP_EQ,
@@ -108,6 +110,10 @@ typedef struct Node {
       struct Node *incdec;
       struct Node *then;
       struct Node *els;
+    };
+    /* Declaration */
+    struct {
+      struct Node *declvar;
     };
   };
 } Node;
