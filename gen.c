@@ -37,17 +37,14 @@ static void emit_if(Node *node) {
   int label_end = label();
   printf("\tcmp $0, %%rax\n");
   printf("\tje .L%d\n", label_els);
-  printf("\tjmp .L%d\n", label_then);
 
   printf(".L%d:\n", label_then);
   emit_expr(node->then);
   printf("\tjmp .L%d\n", label_end);
 
   printf(".L%d:\n", label_els);
-  if (node->els) {
+  if (node->els)
     emit_expr(node->els);
-    printf("\tjmp .L%d\n", label_end);
-  }
 
   printf(".L%d:\n", label_end);
 }
