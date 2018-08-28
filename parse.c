@@ -13,6 +13,7 @@ static Node *read_ident(void);
 static Node *read_term(void);
 static Node *read_mul_div(void);
 static Node *read_add_sub(void);
+static Node *read_shl_shr(void);
 static Node *read_expr(void);
 static Node *read_comp_stmt(void);
 static Node *read_func(void);
@@ -297,8 +298,29 @@ static Node *read_add_sub(void) {
   return node;
 }
 
-static Node *read_eq_and_neq(void) {
+static Node *read_shl_shr(void) {
   Node *node = read_add_sub();
+
+  while (tokscmp((token + 1), "<<") || tokscmp((token + 1), ">>")) {
+    Node *tmp = malloc(sizeof(Node));
+    tmp->left = node;
+    token = next();
+
+    if (tokscmp(token, "<<"))
+      tmp->type = OP_SHL;
+    else if (tokscmp(token, ">>"))
+      tmp->type = OP_SHR;
+
+    tmp->right = read_add_sub();
+
+    node = tmp;
+  }
+
+  return node;
+}
+
+static Node *read_eq_and_neq(void) {
+  Node *node = read_shl_shr();
 
   while (tokscmp((token + 1), "==") || tokscmp((token + 1), "!=")) {
     Node *tmp = malloc(sizeof(Node));
@@ -310,7 +332,7 @@ static Node *read_eq_and_neq(void) {
     else if (tokscmp(token, "!="))
       tmp->type = OP_NEQ;
 
-    tmp->right = read_add_sub();
+    tmp->right = read_shl_shr();
 
     node = tmp;
   }

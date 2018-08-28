@@ -74,6 +74,8 @@ enum {
   OP_MUL,
   OP_DIV,
   OP_REM,
+  OP_SHL,
+  OP_SHR,
 };
 
 typedef struct Node {

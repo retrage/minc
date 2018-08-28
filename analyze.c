@@ -101,6 +101,8 @@ static void analyze_op(Node *node, Map *env) {
     case OP_MUL:
     case OP_DIV:
     case OP_REM:
+    case OP_SHL:
+    case OP_SHR:
       analyze_expr(node->left, env);
       analyze_expr(node->right, env);
       break;

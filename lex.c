@@ -161,6 +161,32 @@ static void read_symbol(void) {
         error("!= expected");
       }
       break;
+    case '<':
+      tokens[token_pos].type = TPUNCTUATOR;
+      tokens[token_pos].sval = malloc(sizeof(char) * 4);
+      if (source[src_pos + 2] == '<') {
+        strcpy(tokens[token_pos].sval, "<<");
+        src_pos++;
+      } else if (source[src_pos + 2] == '=') {
+        strcpy(tokens[token_pos].sval, "<=");
+        src_pos++;
+      } else {
+        strcpy(tokens[token_pos].sval, "<");
+      }
+      break;
+    case '>':
+      tokens[token_pos].type = TPUNCTUATOR;
+      tokens[token_pos].sval = malloc(sizeof(char) * 4);
+      if (source[src_pos + 2] == '>') {
+        strcpy(tokens[token_pos].sval, ">>");
+        src_pos++;
+      } else if (source[src_pos + 2] == '=') {
+        strcpy(tokens[token_pos].sval, ">=");
+        src_pos++;
+      } else {
+        strcpy(tokens[token_pos].sval, "<");
+      }
+      break;
     default:
       return;
   }

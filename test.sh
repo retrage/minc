@@ -53,6 +53,8 @@ runtest "int main() { return 1+2*5; }" 11
 runtest "int main() { return 2*3+4*5; }" 26
 runtest "int main() { return 12/6-4/2; }" 0
 runtest "int main() { return 5*2+6%8/2-4; }" 9
+runtest "int main() { return 1 << 2; }" 4
+runtest "int main() { return 8 >> 1; }" 4
 
 # step 2.4
 runtest "int main() { return (2+5)*2; }" 14
