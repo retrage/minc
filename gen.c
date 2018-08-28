@@ -244,12 +244,12 @@ static void emit_func_prologue(Node *node) {
   printf("\tpush %%rbp\n");
   printf("\tmov %%rsp, %%rbp\n");
 
+  ret_label = label();
+
   long offset;
   offset = 8 * map_size(node->env);
-  if (offset > 0) {
-    printf("\tmovl $%ld, %%r10d\n", offset);
-    printf("\tsub %%r10, %%rsp\n");
-  }
+  if (offset > 0)
+    printf("\tsub $%ld, %%rsp\n", offset);
 
   Node *arg;
   for (int i = 0; i < vector_size(node->arguments); i++) {
@@ -266,10 +266,8 @@ static void emit_func_epilogue(Node *node) {
   printf(".L%d:\n", ret_label);
 
   long offset = 8 * map_size(node->env);
-  if (offset > 0) {
-    printf("\tmovl $%ld, %%edi\n", offset);
-    printf("\tadd %%rdi, %%rsp\n");
-  }
+  if (offset > 0)
+    printf("\tadd $%ld, %%rsp\n", offset);
 
   printf("\tpop %%rbp\n");
   printf("\tret\n");
