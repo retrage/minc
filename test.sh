@@ -47,10 +47,12 @@ runtest "int main() { return 64-32; }" 32
 # step 2.3
 runtest "int main() { return 3*5; }" 15
 runtest "int main() { return 4/2; }" 2
+runtest "int main() { return 5%3; }" 2
 runtest "int main() { return 3*5+1; }" 16
 runtest "int main() { return 1+2*5; }" 11
 runtest "int main() { return 2*3+4*5; }" 26
 runtest "int main() { return 12/6-4/2; }" 0
+runtest "int main() { return 5*2+6%8/2-4; }" 9
 
 # step 2.4
 runtest "int main() { return (2+5)*2; }" 14

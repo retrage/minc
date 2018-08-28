@@ -199,6 +199,11 @@ static void emit_op(Node *node) {
       printf("\tcqto\n");
       printf("\tdiv %%edi\n");
       break;
+    case OP_REM:
+      printf("\tcqto\n");
+      printf("\tdiv %%edi\n");
+      printf("\tmov %%edx, %%eax\n");
+      break;
     default:
       error("internal error");
   }
@@ -226,7 +231,8 @@ static void emit_expr(Node *node) {
     case OP_ADD:
     case OP_SUB:
     case OP_MUL:
-    case OP_DIV:        emit_op(node);        break;
+    case OP_DIV:
+    case OP_REM:        emit_op(node);        break;
     case OP_ASSGIN:     emit_assgin(node);    break;
     default:            error("internal error");
   }

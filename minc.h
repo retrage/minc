@@ -73,6 +73,7 @@ enum {
   OP_SUB,
   OP_MUL,
   OP_DIV,
+  OP_REM,
 };
 
 typedef struct Node {

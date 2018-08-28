@@ -41,6 +41,7 @@ static char *ty2s(int type) {
     case OP_SUB:    return "-";
     case OP_MUL:    return "*";
     case OP_DIV:    return "/";
+    case OP_REM:    return "%";
     default:        return "UNK";
   }
 }
@@ -99,6 +100,7 @@ char *node2s(Node *node) {
     case OP_SUB:
     case OP_MUL:
     case OP_DIV:
+    case OP_REM:
         return format("(%s %s %s)", 
                 ty2s(node->type), node2s(node->left), node2s(node->right));
     default:

@@ -254,7 +254,9 @@ static Node *read_term(void) {
 static Node *read_mul_div(void) {
   Node *node = read_term();
 
-  while (tokscmp((token + 1), "*") || tokscmp((token + 1), "/")) {
+  while (tokscmp((token + 1), "*")
+      || tokscmp((token + 1), "/")
+      || tokscmp((token + 1), "%")) {
     Node *tmp = malloc(sizeof(Node));
     tmp->left = node;
     token = next();
@@ -263,6 +265,8 @@ static Node *read_mul_div(void) {
       tmp->type = OP_MUL;
     else if (tokscmp(token, "/"))
       tmp->type = OP_DIV;
+    else if (tokscmp(token, "%"))
+      tmp->type = OP_REM;
 
     tmp->right = read_term();
     

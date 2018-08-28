@@ -128,6 +128,7 @@ static void read_symbol(void) {
     case '-':
     case '*':
     case '/':
+    case '%':
     case '(':
     case ')':
     case ';':
