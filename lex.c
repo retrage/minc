@@ -184,7 +184,7 @@ static void read_symbol(void) {
         strcpy(tokens[token_pos].sval, ">=");
         src_pos++;
       } else {
-        strcpy(tokens[token_pos].sval, "<");
+        strcpy(tokens[token_pos].sval, ">");
       }
       break;
     default:

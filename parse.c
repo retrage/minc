@@ -14,6 +14,7 @@ static Node *read_term(void);
 static Node *read_mul_div(void);
 static Node *read_add_sub(void);
 static Node *read_shl_shr(void);
+static Node *read_lt_gt_le_ge(void);
 static Node *read_expr(void);
 static Node *read_comp_stmt(void);
 static Node *read_func(void);
@@ -319,8 +320,36 @@ static Node *read_shl_shr(void) {
   return node;
 }
 
-static Node *read_eq_and_neq(void) {
+static Node *read_lt_gt_le_ge(void) {
   Node *node = read_shl_shr();
+
+  while (tokscmp((token + 1), "<")
+      || tokscmp((token + 1), ">")
+      || tokscmp((token + 1), "<=")
+      || tokscmp((token + 1), ">=")) {
+    Node *tmp = malloc(sizeof(Node));
+    tmp->left = node;
+    token = next();
+
+    if (tokscmp(token, "<"))
+      tmp->type = OP_LT;
+    else if (tokscmp(token, ">"))
+      tmp->type = OP_GT;
+    else if (tokscmp(token, "<="))
+      tmp->type = OP_LE;
+    else if (tokscmp(token, ">="))
+      tmp->type = OP_GE;
+
+    tmp->right = read_shl_shr();
+
+    node = tmp;
+  }
+
+  return node;
+}
+
+static Node *read_eq_and_neq(void) {
+  Node *node = read_lt_gt_le_ge();
 
   while (tokscmp((token + 1), "==") || tokscmp((token + 1), "!=")) {
     Node *tmp = malloc(sizeof(Node));
@@ -332,7 +361,7 @@ static Node *read_eq_and_neq(void) {
     else if (tokscmp(token, "!="))
       tmp->type = OP_NEQ;
 
-    tmp->right = read_shl_shr();
+    tmp->right = read_lt_gt_le_ge();
 
     node = tmp;
   }

@@ -94,6 +94,10 @@ static void analyze_op(Node *node, Map *env) {
       analyze_lvar(node->left, env);
       analyze_expr(node->right, env);
       break;
+    case OP_LT:
+    case OP_GT:
+    case OP_LE:
+    case OP_GE:
     case OP_EQ:
     case OP_NEQ:
     case OP_ADD:

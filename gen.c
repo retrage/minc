@@ -173,6 +173,26 @@ static void emit_op(Node *node) {
   printf("\tpop %%rax\n");
   
   switch (node->type) {
+    case OP_LT:
+      printf("\tcmpl %%eax, %%edi\n");
+      printf("\tsetl %%al\n");;
+      printf("\tmovzbl %%al, %%eax\n");
+      break;
+    case OP_GT:
+      printf("\tcmpl %%eax, %%edi\n");
+      printf("\tsetg %%al\n");;
+      printf("\tmovzbl %%al, %%eax\n");
+      break;
+    case OP_LE:
+      printf("\tcmpl %%eax, %%edi\n");
+      printf("\tsetle %%al\n");;
+      printf("\tmovzbl %%al, %%eax\n");
+      break;
+    case OP_GE:
+      printf("\tcmpl %%eax, %%edi\n");
+      printf("\tsetge %%al\n");;
+      printf("\tmovzbl %%al, %%eax\n");
+      break;
     case OP_EQ:
       printf("\tcmpl %%eax, %%edi\n");
       printf("\tsete %%al\n");
@@ -234,6 +254,10 @@ static void emit_expr(Node *node) {
     case AST_WHILE:     emit_while(node);     break;
     case AST_FOR:       emit_for(node);       break;
     case AST_DECL:      emit_decl(node);      break;
+    case OP_LT:
+    case OP_GT:
+    case OP_LE:
+    case OP_GE:
     case OP_EQ:
     case OP_NEQ:
     case OP_ADD:

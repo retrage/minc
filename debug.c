@@ -34,6 +34,10 @@ void dump_tokens(void) {
 
 static char *ty2s(int type) {
   switch (type) {
+    case OP_LT:     return "<";
+    case OP_GT:     return ">";
+    case OP_LE:     return "<=";
+    case OP_GE:     return ">=";
     case OP_EQ:     return "==";
     case OP_NEQ:    return "!=";
     case OP_ASSGIN: return "=";
@@ -95,6 +99,10 @@ char *node2s(Node *node) {
               node2s(node->incdec), node2s(node->then));
     case AST_DECL:
       return format("(decl declvar=%s)", node2s(node->declvar));
+    case OP_LT:
+    case OP_GT:
+    case OP_LE:
+    case OP_GE:
     case OP_EQ:
     case OP_NEQ:
     case OP_ASSGIN:
