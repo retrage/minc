@@ -115,5 +115,7 @@ runtest "main() { a = 0; while (a != 10) { a = a + 1; } return a; }" 10
 runtest "main() { a = 10; while (a != 0) { a = a - 1; } return a; }" 0
 runtest "main() { b = 0; for (a = 0; a != 10; a = a + 1) { b = b + 2; } return b; }" 20
 runtest "main() { b = 0; for (a = 0; a != 10; a = a + 1) b = b + 2; return b; }" 20
+runtest "fib(n) { if (n == 0) { return 1; } if (n == 1) { return 1; } else { return fib(n - 2) + fib(n - 1); } } main() { return fib(5); }" 8
+runtest "fib(n) { if (n == 0) { return 1; } if (n == 1) { return 1; } else { return fib(n - 2) + fib(n - 1); } } main() { return fib(10); }" 89
 
 echo OK

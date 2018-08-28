@@ -346,7 +346,8 @@ static Node *read_comp_stmt(void) {
     vector_push(node->stmts, expr);
 
   while (tokscmp((token + 1), ";") || !tokscmp((token + 1), "}")) {
-    token = next();
+    if (tokscmp((token + 1), ";"))
+      token = next();
 
     expr = read_expr();
     if (expr->type == AST_EXPR && expr->expr->type == UNK) {
