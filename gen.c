@@ -8,6 +8,8 @@ static void emit_if(Node *);
 static void emit_while(Node *);
 static void emit_for(Node *);
 static void emit_decl(Node *);
+static void emit_addr(Node *);
+static void emit_deref(Node *);
 static void emit_func_call(Node *);
 static void emit_literal(Node *);
 static void emit_lvar(Node *);
@@ -98,6 +100,23 @@ static void emit_for(Node *node) {
 
 static void emit_decl(Node *node) {
   /* Do nothing */
+}
+
+static void emit_addr(Node *node) {
+  if (node->type != AST_ADDR)
+    error("internal error");
+
+  long offset = node->operand->expr->ty->offset;
+  printf("\tleaq %ld(%%rbp), %%rax\n", offset);
+}
+
+static void emit_deref(Node *node) {
+  if (node->type != AST_DEREF)
+    error("internal error");
+
+  long offset = node->operand->expr->ty->offset;
+  printf("\tmovq %ld(%%rbp), %%rax\n", offset);
+  printf("\tmov (%%rax), %%rax\n");
 }
 
 static void emit_func_call(Node *node) {
@@ -254,6 +273,8 @@ static void emit_expr(Node *node) {
     case AST_WHILE:     emit_while(node);     break;
     case AST_FOR:       emit_for(node);       break;
     case AST_DECL:      emit_decl(node);      break;
+    case AST_ADDR:      emit_addr(node);      break;
+    case AST_DEREF:     emit_deref(node);     break;
     case OP_LT:
     case OP_GT:
     case OP_LE:

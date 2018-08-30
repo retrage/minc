@@ -115,6 +115,10 @@ char *node2s(Node *node) {
               node2s(node->incdec), node2s(node->then));
     case AST_DECL:
       return format("(decl declvar=%s)", node2s(node->declvar));
+    case AST_ADDR:
+      return format("(addr %s)", node2s(node->operand));
+    case AST_DEREF:
+      return format("(deref %s)", node2s(node->operand));
     case OP_LT:
     case OP_GT:
     case OP_LE:

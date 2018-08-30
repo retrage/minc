@@ -13,6 +13,7 @@ static Node *read_for(void);
 static Node *read_decl(void);
 static Node *read_ident(void);
 static Node *read_term(void);
+static Node *read_unary(void);
 static Node *read_mul_div(void);
 static Node *read_add_sub(void);
 static Node *read_shl_shr(void);
@@ -274,8 +275,29 @@ static Node *read_term(void) {
   return node;
 }
 
+static Node *read_unary(void) {
+  Node *node;
+
+  if (tokscmp((token + 1), "&")) {
+    token = next();
+
+    node = malloc(sizeof(Node));
+    node->type = AST_ADDR;
+    node->operand = read_expr();
+  } else if (tokscmp((token + 1), "*")) {
+    token = next();
+
+    node = malloc(sizeof(Node));
+    node->type = AST_DEREF;
+    node->operand =  read_expr();
+  } else
+    node = read_term();
+
+  return node;
+}
+
 static Node *read_mul_div(void) {
-  Node *node = read_term();
+  Node *node = read_unary();
 
   while (tokscmp((token + 1), "*")
       || tokscmp((token + 1), "/")
@@ -291,7 +313,7 @@ static Node *read_mul_div(void) {
     else if (tokscmp(token, "%"))
       tmp->type = OP_REM;
 
-    tmp->right = read_term();
+    tmp->right = read_unary();
     
     node = tmp;
   }

@@ -5,6 +5,8 @@ static void analyze_if(Node *, Map *);
 static void analyze_while(Node *, Map *);
 static void analyze_for(Node *, Map *);
 static void analyze_decl(Node *, Map *);
+static void analyze_addr(Node *, Map *);
+static void analyze_deref(Node *, Map *);
 static void analyze_literal(Node *, Map *);
 static void analyze_lvar(Node *, Map *);
 static void analyze_op(Node *, Map *);
@@ -79,6 +81,34 @@ static void analyze_decl(Node *node, Map *env) {
   map_push(env, declvar->var_name, (void *)declvar->ty);
 }
 
+static void analyze_addr(Node *node, Map *env) {
+  if (node->type != AST_ADDR)
+    error("internal error");
+
+  Node *expr = node->operand->expr;
+  if (expr->type != AST_LVAR)
+    error("lvalue required as unary '&' operand");
+
+  Type *ty = map_get(env, expr->var_name);
+  if (ty)
+    expr->ty = ty;
+  else
+    error("%s undeclared", expr->var_name);
+}
+
+static void analyze_deref(Node *node, Map *env) {
+  if (node->type != AST_DEREF)
+    error("internal error");
+
+  /* FIXME: check if operand represents address */
+  Node *expr = node->operand->expr;
+  Type *ty = map_get(env, expr->var_name);
+  if (ty)
+    expr->ty = ty;
+  else
+    error("%s undeclared", expr->var_name);
+}
+
 static void analyze_literal(Node *node, Map *env) {
   if (node->type != AST_LITERAL)
     error("internal error");
@@ -100,7 +130,8 @@ static void analyze_op(Node *node, Map *env) {
     case OP_ASSGIN:
       if (node->left->type != AST_LVAR)
         error("lvalue must be variable");
-      analyze_lvar(node->left, env);
+      /* FIXME: check if valid lvalue */
+      analyze_expr(node->left, env);
       analyze_expr(node->right, env);
       break;
     case OP_LT:
@@ -144,6 +175,8 @@ static void analyze_expr(Node *node, Map *env) {
     case AST_WHILE:     analyze_while(node, env);     break;
     case AST_FOR:       analyze_for(node, env);       break;
     case AST_DECL:      analyze_decl(node, env);      break;
+    case AST_ADDR:      analyze_addr(node, env);      break;
+    case AST_DEREF:     analyze_deref(node, env);     break;
     default:            analyze_op(node, env);
   }
 }

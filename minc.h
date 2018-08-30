@@ -64,6 +64,8 @@ enum {
   AST_WHILE,
   AST_FOR,
   AST_DECL,
+  AST_ADDR,
+  AST_DEREF,
   AST_TESTVECTOR,
   AST_TESTMAP,
   OP_LT,
@@ -133,6 +135,10 @@ typedef struct Node {
     /* Declaration */
     struct {
       struct Node *declvar;
+    };
+    /* Unary operator */
+    struct {
+      struct Node *operand;
     };
   };
 } Node;

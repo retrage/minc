@@ -129,6 +129,7 @@ static void read_symbol(void) {
     case '*':
     case '/':
     case '%':
+    case '&':
     case '(':
     case ')':
     case ';':
@@ -138,7 +139,7 @@ static void read_symbol(void) {
       symbol[0] = source[src_pos + 1];
       symbol[1] = '\0';
       tokens[token_pos].type = TPUNCTUATOR;
-      tokens[token_pos].sval = malloc(sizeof(char) * 4);
+      tokens[token_pos].sval = malloc(sizeof(char) * 2);
       strcpy(tokens[token_pos].sval, symbol);
       break;
     case '=':

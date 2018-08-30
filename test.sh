@@ -111,7 +111,7 @@ runtest "int foo(int a) { return a; } int main() { return foo(1); }" 1
 runtest "int foo(int a, int b) { int c; c = 3; return a + b + c; } int main() { int a; a = 1; int b; b = 2; return foo(a, b); }" 6
 runtest "int many_args(int foo, int bar, int baz, int hog, int fuz, int hug) { baz = bar + foo * baz; hog = fuz - hug / hog; return baz + hog; } int main() { return many_args(1, 2, 3, 4, 5, 6); }" 9
 
-# step 4.3
+# step 5
 runtest "int main() { if (1) { int a; a = 1; } return a; }" 1
 runtest "int main() { int a; a = 1; int b; b = 2; if (a != b) { a = 3; } else { b = 4; } return a + b; }" 5
 runtest "int foo(int a) { int b; if (a == 1) b = 1; return b; } int main() { return foo(1); }" 1
@@ -125,5 +125,10 @@ runtest "int main() { int a; int b; b = 0; for (a = 0; a != 10; a = a + 1) { b =
 runtest "int main() { int a; int b; b = 0; for (a = 0; a != 10; a = a + 1) b = b + 2; return b; }" 20
 runtest "int fib(int n) { if (n == 0) { return 1; } if (n == 1) { return 1; } else { return fib(n - 2) + fib(n - 1); } } int main() { return fib(5); }" 8
 runtest "int fib(int n) { if (n == 0) { return 1; } if (n == 1) { return 1; } else { return fib(n - 2) + fib(n - 1); } } int main() { return fib(10); }" 89
+
+# step 6
+
+# step 7
+runtest "int main() { int x; x = 3; int *y; y = &x; return *y; }" 3
 
 echo OK
