@@ -82,6 +82,18 @@ enum {
   OP_SHR,
 };
 
+enum {
+  TYUNK,
+  TYINT,
+  TYPTR,
+};
+
+typedef struct Type {
+  int ty;
+  struct Type *ptrof;
+  long offset;
+} Type;
+
 typedef struct Node {
   int type;
   union {
@@ -104,7 +116,7 @@ typedef struct Node {
     /* Local variable */
     struct {
       char *var_name;
-      long offset;
+      Type *ty;
     };
     /* Return */
     struct Node *retval;

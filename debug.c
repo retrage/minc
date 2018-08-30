@@ -32,7 +32,23 @@ void dump_tokens(void) {
   }
 }
 
-static char *ty2s(int type) {
+static char *ty2s(Type *ty) {
+  Buffer *buf = buffer_new();
+  Type *tmp = ty;
+  while (tmp->ty == TYPTR) {
+    buffer_write(buf, '*');
+    tmp = tmp->ptrof;
+  }
+  switch (tmp->ty) {
+    case TYINT:     buffer_append(buf, "int", sizeof("int")); break;
+    case TYPTR:     buffer_append(buf, "*", sizeof("*"));     break;
+    case TYUNK:     buffer_append(buf, "UNK", sizeof("UNK")); break;
+  }
+
+  return buffer_body(buf);
+}
+
+static char *op2s(int type) {
   switch (type) {
     case OP_LT:     return "<";
     case OP_GT:     return ">";
@@ -82,7 +98,7 @@ char *node2s(Node *node) {
     case AST_LITERAL:
       return format("%d", node->int_value);
     case AST_LVAR:
-      return format("(lvar lv=%s)", node->var_name);
+      return format("(lvar lv=%s ty=%s)", node->var_name, ty2s(node->ty));
     case AST_EXPR:
       return format("(expr %s)", node2s(node->expr));
     case AST_RETURN:
@@ -114,7 +130,7 @@ char *node2s(Node *node) {
     case OP_SHL:
     case OP_SHR:
         return format("(%s %s %s)", 
-                ty2s(node->type), node2s(node->left), node2s(node->right));
+                op2s(node->type), node2s(node->left), node2s(node->right));
     default:
       return "UNK";
   }

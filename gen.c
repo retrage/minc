@@ -124,7 +124,7 @@ static void emit_lvar(Node *node) {
   if (node->type != AST_LVAR)
     error("internal error");
 
-  printf("\tleaq %ld(%%rbp), %%rax\n", node->offset);
+  printf("\tleaq %ld(%%rbp), %%rax\n", node->ty->offset);
   printf("\tmovq (%%rax), %%rax\n");
 }
 
@@ -141,7 +141,7 @@ static void emit_lvalue(Node *node) {
   if (node->type != AST_LVAR)
     error("lvalue must be lvar");
 
-  printf("\tleaq %ld(%%rbp), %%rax\n", node->offset);
+  printf("\tleaq %ld(%%rbp), %%rax\n", node->ty->offset);
 }
 
 static void emit_rvalue(Node *node) {
@@ -298,10 +298,11 @@ static void emit_func_prologue(Node *node) {
     printf("\tsub $%ld, %%rsp\n", offset);
 
   Node *arg;
+  Type *ty;
   for (int i = 0; i < vector_size(node->arguments); i++) {
     arg = vector_get(node->arguments, i);
-    offset = (long)map_get(node->env, arg->expr->var_name);
-    printf("\tmov %%%s, %ld(%%rbp)\n", qregs[i], offset);
+    ty = map_get(node->env, arg->expr->var_name);
+    printf("\tmov %%%s, %ld(%%rbp)\n", qregs[i], ty->offset);
   }
 }
 
@@ -311,7 +312,8 @@ static void emit_func_epilogue(Node *node) {
 
   printf(".L%d:\n", ret_label);
 
-  long offset = 8 * map_size(node->env);
+  long offset;
+  offset = 8 * map_size(node->env);
   if (offset > 0)
     printf("\tadd $%ld, %%rsp\n", offset);
 
