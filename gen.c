@@ -193,32 +193,32 @@ static void emit_op(Node *node) {
   
   switch (node->type) {
     case OP_LT:
-      printf("\tcmpl %%eax, %%edi\n");
+      printf("\tcmpl %%edi, %%eax\n");
       printf("\tsetl %%al\n");;
       printf("\tmovzbl %%al, %%eax\n");
       break;
     case OP_GT:
-      printf("\tcmpl %%eax, %%edi\n");
+      printf("\tcmpl %%edi, %%eax\n");
       printf("\tsetg %%al\n");;
       printf("\tmovzbl %%al, %%eax\n");
       break;
     case OP_LE:
-      printf("\tcmpl %%eax, %%edi\n");
+      printf("\tcmpl %%edi, %%eax\n");
       printf("\tsetle %%al\n");;
       printf("\tmovzbl %%al, %%eax\n");
       break;
     case OP_GE:
-      printf("\tcmpl %%eax, %%edi\n");
+      printf("\tcmpl %%edi, %%eax\n");
       printf("\tsetge %%al\n");;
       printf("\tmovzbl %%al, %%eax\n");
       break;
     case OP_EQ:
-      printf("\tcmpl %%eax, %%edi\n");
+      printf("\tcmpl %%edi, %%eax\n");
       printf("\tsete %%al\n");
       printf("\tmovzbl %%al, %%eax\n");
       break;
     case OP_NEQ:
-      printf("\tcmpl %%eax, %%edi\n");
+      printf("\tcmpl %%edi, %%eax\n");
       printf("\tsetne %%al\n");
       printf("\tmovzbl %%al, %%eax\n");
       break;

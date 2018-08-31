@@ -76,10 +76,10 @@ runtest "int main() { return 2+2==8/2; }" 1
 runtest "int main() { return 6-2==1*7; }" 0
 runtest "int main() { return (4-2)*(5+1)!=(4+8)/3; }" 1
 runtest "int main() { return (4-2)*(5+1)==(4+8)/3; }" 0
-runtest "int main() { return (4-2)*(5+1)<(4+8)/3; }" 1
-runtest "int main() { return (4-2)*(5+1)>(4+8)/3; }" 0
-runtest "int main() { return (4-2)*(5+1)<=(4+8)/3; }" 1
-runtest "int main() { return (4-2)*(5+1)>=(4+8)/3; }" 0
+runtest "int main() { return (4-2)*(5+1)<(4+8)/3; }" 0
+runtest "int main() { return (4-2)*(5+1)>(4+8)/3; }" 1
+runtest "int main() { return (4-2)*(5+1)<=(4+8)/3; }" 0
+runtest "int main() { return (4-2)*(5+1)>=(4+8)/3; }" 1
 
 # step 3.1
 runtest "int main() { 1; return 2; }" 2
