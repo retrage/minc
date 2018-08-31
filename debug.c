@@ -56,6 +56,11 @@ static char *op2s(int type) {
     case OP_GE:     return ">=";
     case OP_EQ:     return "==";
     case OP_NEQ:    return "!=";
+    case OP_AND:    return "&";
+    case OP_XOR:    return "^";
+    case OP_OR:     return "|";
+    case OP_LOG_AND:return "&&";
+    case OP_LOG_OR: return "||";
     case OP_ASSGIN: return "=";
     case OP_ADD:    return "+";
     case OP_SUB:    return "-";
