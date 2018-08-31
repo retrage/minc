@@ -222,6 +222,37 @@ static void emit_op(Node *node) {
       printf("\tsetne %%al\n");
       printf("\tmovzbl %%al, %%eax\n");
       break;
+    case OP_AND:
+      printf("\tandl %%edi, %%eax\n");
+      break;
+    case OP_XOR:
+      printf("\txorl %%edi, %%eax\n");
+      break;
+    case OP_OR:
+      printf("\torl %%edi, %%eax\n");
+      break;
+    case OP_LOG_AND:
+      {
+      int label_end = label();
+      printf("\tcmpl $0, %%edi\n");
+      printf("\tje .L%d\n", label_end);
+      printf("\tcmpl $0, %%eax\n");
+      printf("\tje .L%d\n", label_end);
+      printf("\tmov1 $1, %%eax\n");
+      printf(".L%d:\n", label_end);
+      }
+      break;
+    case OP_LOG_OR:
+      {
+      int label_end = label();
+      printf("\tcmpl $1, %%edi\n");
+      printf("\tjne .L%d\n", label_end);
+      printf("\tcmpl $1, %%eax\n");
+      printf("\tjne .L%d\n", label_end);
+      printf("\tmov1 $0, %%eax\n");
+      printf(".L%d:\n", label_end);
+      }
+      break;
     case OP_ASSGIN:
       printf("\tmovl %%edi, (%%rax)\n");
       break;
@@ -281,6 +312,11 @@ static void emit_expr(Node *node) {
     case OP_GE:
     case OP_EQ:
     case OP_NEQ:
+    case OP_AND:
+    case OP_XOR:
+    case OP_OR:
+    case OP_LOG_AND:
+    case OP_LOG_OR:
     case OP_ADD:
     case OP_SUB:
     case OP_MUL:

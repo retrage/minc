@@ -55,6 +55,9 @@ runtest "int main() { return 12/6-4/2; }" 0
 runtest "int main() { return 5*2+6%8/2-4; }" 9
 runtest "int main() { return 1 << 2; }" 4
 runtest "int main() { return 8 >> 1; }" 4
+runtest "int main() { return 73 & 29; }" 9
+runtest "int main() { return 73 ^ 29; }" 84
+runtest "int main() { return 73 | 29; }" 93
 
 # step 2.4
 runtest "int main() { return (2+5)*2; }" 14
@@ -94,6 +97,16 @@ runtest "int main() { int b; b = 1 + 2; return b; }" 3
 runtest "int main() { int a; a = 1; int b; b = 2; return a + b; }" 3
 runtest "int main() { int a; a = 1 * (2 + 3); int b; b = (7 - 1) / 2; return b; }" 3
 runtest "int main() { int a; a = 1 * (2 + 3); int b; b = (7 - 1) / 2; return a * b; }" 15
+runtest "int main() { int a; a = 3; a *= 3; return a; }" 9
+runtest "int main() { int a; a = 9; a /= 3; return a; }" 3
+runtest "int main() { int a; a = 9; a %= 5; return a; }" 4
+runtest "int main() { int a; a = 9; a += 5; return a; }" 14
+runtest "int main() { int a; a = 9; a -= 5; return a; }" 4
+runtest "int main() { int a; a = 1; a <<= 2; return a; }" 4
+runtest "int main() { int a; a = 8; a >>= 1; return a; }" 4
+runtest "int main() { int a; a = 73; a &= 29; return a; }" 9
+runtest "int main() { int a; a = 73; a ^= 29; return a; }" 84
+runtest "int main() { int a; a = 73; a |= 29; return a; }" 93
 
 # step 4.1
 calltest "int main() { foo(); return 0; }" "test4-1-1" "OK"

@@ -121,7 +121,7 @@ static void read_string(void) {
 }
 
 static void read_symbol(void) {
-  char symbol[2];
+  char symbol[4];
 
   switch (source[src_pos + 1]) {
     case '+':
@@ -130,15 +130,44 @@ static void read_symbol(void) {
     case '/':
     case '%':
     case '&':
+      /* Tokenize && */
+      if (source[src_pos + 1] == '&' && source[src_pos + 2] == '&') {
+        tokens[token_pos].type = TPUNCTUATOR;
+        tokens[token_pos].sval = malloc(sizeof(char) * 4);
+        strcpy(tokens[token_pos].sval, "&&");
+        src_pos++;
+        break;
+      }
+    case '^':
+    case '|':
+      /* Tokenize || */
+      if (source[src_pos + 1] == '|' && source[src_pos + 2] == '|') {
+        tokens[token_pos].type = TPUNCTUATOR;
+        tokens[token_pos].sval = malloc(sizeof(char) * 4);
+        strcpy(tokens[token_pos].sval, "||");
+        src_pos++;
+        break;
+      }
+      /* Tokenize *= /= %= += -= &= ^= |= */
+      if (source[src_pos + 2] == '=') {
+        symbol[0] = source[src_pos + 1];
+        symbol[1] = source[src_pos + 2];
+        symbol[2] = '\0';
+        tokens[token_pos].type = TPUNCTUATOR;
+        tokens[token_pos].sval = malloc(sizeof(char) * 4);
+        strcpy(tokens[token_pos].sval, symbol);
+        src_pos++;
+        break;
+      }
     case '(':
     case ')':
     case ';':
     case ',':
     case '{':
     case '}':
+      tokens[token_pos].type = TPUNCTUATOR;
       symbol[0] = source[src_pos + 1];
       symbol[1] = '\0';
-      tokens[token_pos].type = TPUNCTUATOR;
       tokens[token_pos].sval = malloc(sizeof(char) * 2);
       strcpy(tokens[token_pos].sval, symbol);
       break;
@@ -166,8 +195,13 @@ static void read_symbol(void) {
       tokens[token_pos].type = TPUNCTUATOR;
       tokens[token_pos].sval = malloc(sizeof(char) * 4);
       if (source[src_pos + 2] == '<') {
-        strcpy(tokens[token_pos].sval, "<<");
-        src_pos++;
+        if (source[src_pos + 3] == '=') {
+          strcpy(tokens[token_pos].sval, "<<=");
+          src_pos += 2;
+        } else {
+          strcpy(tokens[token_pos].sval, "<<");
+          src_pos++;
+        }
       } else if (source[src_pos + 2] == '=') {
         strcpy(tokens[token_pos].sval, "<=");
         src_pos++;
@@ -179,8 +213,13 @@ static void read_symbol(void) {
       tokens[token_pos].type = TPUNCTUATOR;
       tokens[token_pos].sval = malloc(sizeof(char) * 4);
       if (source[src_pos + 2] == '>') {
-        strcpy(tokens[token_pos].sval, ">>");
-        src_pos++;
+        if (source[src_pos + 3] == '=') {
+          strcpy(tokens[token_pos].sval, ">>=");
+          src_pos += 2;
+        } else {
+          strcpy(tokens[token_pos].sval, ">>");
+          src_pos++;
+        }
       } else if (source[src_pos + 2] == '=') {
         strcpy(tokens[token_pos].sval, ">=");
         src_pos++;

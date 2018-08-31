@@ -128,9 +128,9 @@ static void analyze_lvar(Node *node, Map *env) {
 static void analyze_op(Node *node, Map *env) {
   switch (node->type) {
     case OP_ASSGIN:
+      /* FIXME: check if valid lvalue */
       if (node->left->type != AST_LVAR)
         error("lvalue must be variable");
-      /* FIXME: check if valid lvalue */
       analyze_expr(node->left, env);
       analyze_expr(node->right, env);
       break;
@@ -140,6 +140,11 @@ static void analyze_op(Node *node, Map *env) {
     case OP_GE:
     case OP_EQ:
     case OP_NEQ:
+    case OP_AND:
+    case OP_XOR:
+    case OP_OR:
+    case OP_LOG_AND:
+    case OP_LOG_OR:
     case OP_ADD:
     case OP_SUB:
     case OP_MUL:

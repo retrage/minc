@@ -18,6 +18,13 @@ static Node *read_mul_div(void);
 static Node *read_add_sub(void);
 static Node *read_shl_shr(void);
 static Node *read_lt_gt_le_ge(void);
+static Node *read_eq_neq(void);
+static Node *read_and(void);
+static Node *read_xor(void);
+static Node *read_or(void);
+static Node *read_log_and(void);
+static Node *read_log_or(void);
+static Node *read_assgin(void);
 static Node *read_expr(void);
 static Node *read_comp_stmt(void);
 static Node *read_func(void);
@@ -391,7 +398,7 @@ static Node *read_lt_gt_le_ge(void) {
   return node;
 }
 
-static Node *read_eq_and_neq(void) {
+static Node *read_eq_neq(void) {
   Node *node = read_lt_gt_le_ge();
 
   while (tokscmp((token + 1), "==") || tokscmp((token + 1), "!=")) {
@@ -412,17 +419,152 @@ static Node *read_eq_and_neq(void) {
   return node;
 }
 
-static Node *read_assgin(void) {
-  Node *node = read_eq_and_neq();
+static Node *read_and(void) {
+  Node *node = read_eq_neq();
 
-  while (tokscmp((token + 1), "=")) {
+  while (tokscmp((token + 1), "&")) {
     Node *tmp = malloc(sizeof(Node));
     tmp->left = node;
     token = next();
 
-    tmp->type = OP_ASSGIN;
+    if (tokscmp(token, "&"))
+      tmp->type = OP_AND;
 
-    tmp->right = read_eq_and_neq();
+    tmp->right = read_eq_neq();
+
+    node = tmp;
+  }
+
+  return node;
+}
+static Node *read_xor(void) {
+  Node *node = read_and();
+
+  while (tokscmp((token + 1), "^")) {
+    Node *tmp = malloc(sizeof(Node));
+    tmp->left = node;
+    token = next();
+
+    if (tokscmp(token, "^"))
+      tmp->type = OP_XOR;
+
+    tmp->right = read_and();
+
+    node = tmp;
+  }
+
+  return node;
+}
+
+static Node *read_or(void) {
+  Node *node = read_xor();
+
+  while (tokscmp((token + 1), "|")) {
+    Node *tmp = malloc(sizeof(Node));
+    tmp->left = node;
+    token = next();
+
+    if (tokscmp(token, "|"))
+      tmp->type = OP_OR;
+
+    tmp->right = read_xor();
+
+    node = tmp;
+  }
+
+  return node;
+}
+
+static Node *read_log_and(void) {
+  Node *node = read_or();
+
+  while (tokscmp((token + 1), "&&")) {
+    Node *tmp = malloc(sizeof(Node));
+    tmp->left = node;
+    token = next();
+
+    if (tokscmp(token, "&&"))
+      tmp->type = OP_LOG_AND;
+
+    tmp->right = read_or();
+
+    node = tmp;
+  }
+
+  return node;
+}
+
+static Node *read_log_or(void) {
+  Node *node = read_log_and();
+
+  while (tokscmp((token + 1), "||")) {
+    Node *tmp = malloc(sizeof(Node));
+    tmp->left = node;
+    token = next();
+
+    if (tokscmp(token, "||"))
+      tmp->type = OP_LOG_OR;
+
+    tmp->right = read_log_and();
+
+    node = tmp;
+  }
+
+  return node;
+}
+
+static Node *read_assgin(void) {
+  Node *node = read_log_or();
+
+  while (tokscmp((token + 1), "=")
+      || tokscmp((token + 1), "*=")
+      || tokscmp((token + 1), "/=")
+      || tokscmp((token + 1), "%=")
+      || tokscmp((token + 1), "+=")
+      || tokscmp((token + 1), "-=")
+      || tokscmp((token + 1), "<<=")
+      || tokscmp((token + 1), ">>=")
+      || tokscmp((token + 1), "&=")
+      || tokscmp((token + 1), "^=")
+      || tokscmp((token + 1), "|=")) {
+    Node *tmp = malloc(sizeof(Node));
+    tmp->left = node;
+
+    if (!tokscmp((token + 1), "=")) {
+      Node *left = malloc(sizeof(Node));
+      memcpy(left, tmp->left, sizeof(Node));
+      Node *op = malloc(sizeof(Node));
+      op->left = left;
+      if (tokscmp((token + 1), "*="))
+        op->type = OP_MUL;
+      else if (tokscmp((token + 1), "/="))
+        op->type = OP_DIV;
+      else if (tokscmp((token + 1), "%="))
+        op->type = OP_REM;
+      else if (tokscmp((token + 1), "+="))
+        op->type = OP_ADD;
+      else if (tokscmp((token + 1), "-="))
+        op->type = OP_SUB;
+      else if (tokscmp((token + 1), "<<="))
+        op->type = OP_SHL;
+      else if (tokscmp((token + 1), ">>="))
+        op->type = OP_SHR;
+      else if (tokscmp((token + 1), "&="))
+        op->type = OP_AND;
+      else if (tokscmp((token + 1), "^="))
+        op->type = OP_XOR;
+      else if (tokscmp((token + 1), "|="))
+        op->type = OP_OR;
+
+      token = next();
+      op->right = read_log_or();
+      tmp->type = OP_ASSGIN;
+      tmp->right = op;
+    } else {
+      token = next();
+      tmp->type = OP_ASSGIN;
+      tmp->right = read_log_or();
+    }
 
     node = tmp;
   }
