@@ -24,6 +24,7 @@ static Node *read_xor(void);
 static Node *read_or(void);
 static Node *read_log_and(void);
 static Node *read_log_or(void);
+static Node *read_ternary(void);
 static Node *read_assgin(void);
 static Node *read_expr(void);
 static Node *read_comp_stmt(void);
@@ -57,16 +58,6 @@ static Type *read_type(void) {
   return ty;
 }
 
-static Node *comp_stmt_from_expr(void) {
-  Node *node = malloc(sizeof(Node));
-  node->type = AST_COMP_STMT;
-  node->stmts = vector_new();
-  vector_push(node->stmts, read_expr());
-  token = next(); /* read ";" */
-
-  return node;
-}
-
 static int tokscmp(Token *tok, char *string) {
   if (tok->type == TIDENT || tok->type == TPUNCTUATOR) {
     if (!strcmp(tok->sval, string))
@@ -74,6 +65,17 @@ static int tokscmp(Token *tok, char *string) {
   }
 
   return 0;
+}
+
+static Node *comp_stmt_from_expr(void) {
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_COMP_STMT;
+  node->stmts = vector_new();
+  vector_push(node->stmts, read_expr());
+  if (tokscmp((token + 1), ";"))
+    token = next(); /* read ";" */
+
+  return node;
 }
 
 static Node *read_lvar(void) {
@@ -513,8 +515,33 @@ static Node *read_log_or(void) {
   return node;
 }
 
-static Node *read_assgin(void) {
+static Node *read_ternary(void) {
   Node *node = read_log_or();
+
+  if (tokscmp((token + 1), "?")) {
+    token = next(); /* read "?" */
+    Node *tmp = malloc(sizeof(Node));
+    tmp->type = AST_IF;
+    tmp->cond = node;
+    tmp->then = comp_stmt_from_expr();
+
+    if (!tokscmp((token + 1), ":"))
+      error(": expected, got %s", tok2s((token + 1)));
+    token = next(); /* read : */
+
+    tmp->els = comp_stmt_from_expr();
+
+    tmp->init = NULL;
+    tmp->incdec = NULL;
+
+    node = tmp;
+  }
+
+  return node;
+}
+
+static Node *read_assgin(void) {
+  Node *node = read_ternary();
 
   while (tokscmp((token + 1), "=")
       || tokscmp((token + 1), "*=")
@@ -557,13 +584,13 @@ static Node *read_assgin(void) {
         op->type = OP_OR;
 
       token = next();
-      op->right = read_log_or();
+      op->right = read_ternary();
       tmp->type = OP_ASSGIN;
       tmp->right = op;
     } else {
       token = next();
       tmp->type = OP_ASSGIN;
-      tmp->right = read_log_or();
+      tmp->right = read_ternary();
     }
 
     node = tmp;

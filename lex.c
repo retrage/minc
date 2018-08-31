@@ -165,6 +165,8 @@ static void read_symbol(void) {
     case ',':
     case '{':
     case '}':
+    case '?':
+    case ':':
       tokens[token_pos].type = TPUNCTUATOR;
       symbol[0] = source[src_pos + 1];
       symbol[1] = '\0';

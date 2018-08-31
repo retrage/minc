@@ -132,6 +132,7 @@ runtest "int foo(int a, int b) { int res; if (a == b) res = 1; else res = 0; ret
 runtest "int foo(int a, int b) { int res; if (a == b) res = 1; else { res = 0; } return res; } int main() { return foo(1, 2); }" 0
 runtest "int foo(int a, int b) { int res; if (a == b) { res = 1; } else res = 0; return res; } int main() { return foo(1, 2); }" 0
 runtest "int foo(int a, int b) { int res; if (a == b) { res = 1; } else { res = 0; } return res; } int main() { return foo(1, 2); }" 0
+runtest "int main() { int a; int b; a = 10; b = a > 5 ? 20 : 40; return b; }" 20
 runtest "int main() { int a; a = 0; while (a != 10) { a = a + 1; } return a; }" 10
 runtest "int main() { int a; a = 10; while (a != 0) { a = a - 1; } return a; }" 0
 runtest "int main() { int a; int b; b = 0; for (a = 0; a != 10; a = a + 1) { b = b + 2; } return b; }" 20
