@@ -137,7 +137,6 @@ static void emit_func_call(Node *node) {
   if (node->type != AST_FUNC_CALL)
     error("internal error");
 
-  /* FIXME: Number of arguments must be less than 6 */
   for (int i = 0; i < vector_size(node->arguments); i++) {
     emit_expr(vector_get(node->arguments, i));
     printf("\tmov %%rax, %%%s\n", qregs[i]);

@@ -21,7 +21,6 @@ static void analyze_func_call(Node *node, Map *env) {
   if (vector_size(node->arguments) > 6)
     error("too many arguments");
 
-  /* FIXME: check number of arguments */
   for (int i = 0; i < vector_size(node->arguments); i++) {
     Node *arg = vector_get(node->arguments, i);
     analyze_expr(arg, env);
