@@ -5,7 +5,7 @@ int calc_offset(Map *env) {
   Vector *keys = map_keys(env);
   for (int i = 0; i < vector_size(keys); i++) {
     Type *ty = map_get(env, vector_get(keys, i));
-    offset += ty->offset;
+    offset += ty->size;
   }
 
   return offset;
