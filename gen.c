@@ -268,9 +268,6 @@ static void emit_op(Node *node) {
       printf(".L%d:\n", label_end);
       }
       break;
-    case OP_ASSGIN:
-      printf("\tmovl %%edi, (%%rax)\n");
-      break;
     case OP_ADD:
       printf("\taddl %%edi, %%eax\n");
       break;
