@@ -106,16 +106,30 @@ static void emit_addr(Node *node) {
   if (node->type != AST_ADDR)
     error("internal error");
 
-  long offset = node->operand->expr->ty->offset;
-  printf("\tleaq %ld(%%rbp), %%rax\n", offset);
+  if (!node->operand)
+    error("internal error");
+
+  if (!node->operand->expr)
+    error("internal error");
+
+  Node *expr = node->operand->expr;
+  int offset = expr->ty->offset;
+  printf("\tleaq %d(%%rbp), %%rax\n", -offset);
 }
 
 static void emit_deref(Node *node) {
   if (node->type != AST_DEREF)
     error("internal error");
 
-  long offset = node->operand->expr->ty->offset;
-  printf("\tmovq %ld(%%rbp), %%rax\n", offset);
+  if (!node->operand)
+    error("internal error");
+
+  if (!node->operand->expr)
+    error("internal error");
+
+  Node *expr = node->operand->expr;
+  int offset = expr->ty->offset;
+  printf("\tmovq %d(%%rbp), %%rax\n", -offset);
   printf("\tmov (%%rax), %%rax\n");
 }
 
@@ -143,7 +157,8 @@ static void emit_lvar(Node *node) {
   if (node->type != AST_LVAR)
     error("internal error");
 
-  printf("\tleaq %ld(%%rbp), %%rax\n", node->ty->offset);
+  int offset = node->ty->offset;
+  printf("\tleaq %d(%%rbp), %%rax\n", -offset);
   printf("\tmovq (%%rax), %%rax\n");
 }
 
@@ -160,7 +175,8 @@ static void emit_lvalue(Node *node) {
   if (node->type != AST_LVAR)
     error("lvalue must be lvar");
 
-  printf("\tleaq %ld(%%rbp), %%rax\n", node->ty->offset);
+  int offset = node->ty->offset;
+  printf("\tleaq %d(%%rbp), %%rax\n", -offset);
 }
 
 static void emit_rvalue(Node *node) {
@@ -349,17 +365,15 @@ static void emit_func_prologue(Node *node) {
 
   ret_label = label();
 
-  long offset;
-  offset = 8 * map_size(node->env);
+  int offset = calc_offset(node->env);
   if (offset > 0)
-    printf("\tsub $%ld, %%rsp\n", offset);
+    printf("\tsub $%d, %%rsp\n", offset);
 
-  Node *arg;
-  Type *ty;
   for (int i = 0; i < vector_size(node->arguments); i++) {
-    arg = vector_get(node->arguments, i);
-    ty = map_get(node->env, arg->expr->var_name);
-    printf("\tmov %%%s, %ld(%%rbp)\n", qregs[i], ty->offset);
+    Node *arg = vector_get(node->arguments, i);
+    Type *ty = map_get(node->env, arg->expr->var_name);
+    int offset = ty->offset;
+    printf("\tmov %%%s, %d(%%rbp)\n", qregs[i], -offset);
   }
 }
 
@@ -369,10 +383,9 @@ static void emit_func_epilogue(Node *node) {
 
   printf(".L%d:\n", ret_label);
 
-  long offset;
-  offset = 8 * map_size(node->env);
+  int offset = calc_offset(node->env);
   if (offset > 0)
-    printf("\tadd $%ld, %%rsp\n", offset);
+    printf("\tadd $%d, %%rsp\n", offset);
 
   printf("\tpop %%rbp\n");
   printf("\tret\n");

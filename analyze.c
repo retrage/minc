@@ -67,17 +67,22 @@ static void analyze_decl(Node *node, Map *env) {
       error("redeclaration of %s", declvar->var_name);
   }
 
-  /* FIXME: calculate offset by size of type */
+  int size;
+  int offset = calc_offset(env);
   switch (declvar->ty->ty) {
     case TYINT:
+      size = 4;
+      break;
     case TYPTR:
-      declvar->ty->offset = -8 * (map_size(env) + 1);
+      size = 8;
       break;
     case TYUNK:
     default:
       error("internal error");
   }
 
+  declvar->ty->size = size;
+  declvar->ty->offset = offset + size;
   map_push(env, declvar->var_name, (void *)declvar->ty);
 }
 
@@ -202,19 +207,25 @@ static void analyze_func(Node *node, Map *env) {
   if (vector_size(node->arguments) > 6)
     error("too many arguments");
 
-  long offset = 0;
   for (int i = 0; i < vector_size(node->arguments); i++) {
     Node *arg = vector_get(node->arguments, i);
     if (arg->type != AST_EXPR || arg->expr->type != AST_LVAR)
       error("invalid parameter %s", node2s(arg));
 
-    /* FIXME: calculate offset by size of type */
-    offset -= 8;
+    int size;
+    int offset = calc_offset(env);
     switch (arg->expr->ty->ty) {
       case TYINT:
+        size = 4;
+        break;
       case TYPTR:
-        arg->expr->ty->offset = offset;
+        size = 8;
+        break;
+      default:
+        error("internal error");
     }
+    arg->expr->ty->size = size;
+    arg->expr->ty->offset = offset + size;
     map_push(env, arg->expr->var_name, (void *)arg->expr->ty);
   }
 
@@ -234,7 +245,7 @@ void analyze_toplevel(Vector *toplevels) {
     for (int k = 0; k < vector_size(keys); k++) {
       char *key = vector_get(keys, k);
       Type *ty = map_get(node->env, key);
-      printf("# %s: %ld\n", key, ty->offset);
+      printf("# %s: %d %d\n", key, ty->size, ty->offset);
     }
   }
 }

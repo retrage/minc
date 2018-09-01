@@ -98,7 +98,8 @@ enum {
 typedef struct Type {
   int ty;
   struct Type *ptrof;
-  long offset;
+  int size;
+  int offset;
 } Type;
 
 typedef struct Node {
@@ -195,5 +196,8 @@ void emit_toplevel(Vector *);
 /* test.c */
 int test_vector(void);
 int test_map(void);
+
+/* util.c */
+int calc_offset(Map *);
 
 #endif /* MINC_H */
