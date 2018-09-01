@@ -23,7 +23,8 @@ static void emit_comp_stmt(Node *);
 static void emit_func_prologue(Node *);
 static void emit_func_epilogue(Node *);
 
-const char *qregs[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
+char *lregs[] = { "edi", "esi", "edx", "ecx", "r8d", "r9d" };
+char *qregs[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
 
 static int ret_label = 0;
 static int label_idx = 0;
@@ -194,7 +195,11 @@ static void emit_assgin(Node *node) {
   printf("\tpop %%rdi\n");
   printf("\tpop %%rax\n");
 
-  printf("\tmovl %%edi, (%%rax)\n");
+  /* FIXME: analyze the type of right operand */
+  if (node->right->type == AST_ADDR)
+    printf("\tmov %%rdi, (%%rax)\n");
+  else
+    printf("\tmov %%edi, (%%rax)\n");
 }
 
 static void emit_op(Node *node) {
@@ -369,7 +374,19 @@ static void emit_func_prologue(Node *node) {
     Node *arg = vector_get(node->arguments, i);
     Type *ty = map_get(node->env, arg->expr->var_name);
     int offset = ty->offset;
-    printf("\tmov %%%s, %d(%%rbp)\n", qregs[i], -offset);
+    char *regs;
+    switch (ty->ty) {
+      case TYINT:
+        regs = lregs[i];
+        break;
+      case TYPTR:
+        regs = qregs[i];
+        break;
+      case TYUNK:
+      default:
+        error("internal error");
+    }
+    printf("\tmov %%%s, %d(%%rbp)\n", regs, -offset);
   }
 }
 
