@@ -97,6 +97,8 @@ runtest "int main() { int b; b = 1 + 2; return b; }" 3
 runtest "int main() { int a; a = 1; int b; b = 2; return a + b; }" 3
 runtest "int main() { int a; a = 1 * (2 + 3); int b; b = (7 - 1) / 2; return b; }" 3
 runtest "int main() { int a; a = 1 * (2 + 3); int b; b = (7 - 1) / 2; return a * b; }" 15
+runtest "int main() { int a = 1 * (2 + 3); int b = (7 - 1) / 2; return b; }" 3
+runtest "int main() { int a = 1 * (2 + 3); int b = (7 - 1) / 2; return a * b; }" 15
 runtest "int main() { int a; a = 3; a *= 3; return a; }" 9
 runtest "int main() { int a; a = 9; a /= 3; return a; }" 3
 runtest "int main() { int a; a = 9; a %= 5; return a; }" 4

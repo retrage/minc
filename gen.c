@@ -100,7 +100,12 @@ static void emit_for(Node *node) {
 }
 
 static void emit_decl(Node *node) {
-  /* Do nothing */
+  if (node->type != AST_DECL)
+    error("internal error");
+
+  Node *expr = node->declvar->expr;
+  if (expr->type == OP_ASSGIN)
+    emit_expr(expr);
 }
 
 static void emit_addr(Node *node) {

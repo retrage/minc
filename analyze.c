@@ -59,8 +59,19 @@ static void analyze_decl(Node *node, Map *env) {
   if (node->type != AST_DECL)
     error("internal error");
 
-  Node *declvar = node->declvar->expr;
   Vector *lvars = map_keys(env);
+  Node *declvar;
+
+  Node *expr = node->declvar->expr;
+  if (expr->type == OP_ASSGIN) {
+    if (expr->left->type != AST_LVAR)
+      error("internal error");
+    declvar = expr->left;
+  } else if (expr->type == AST_LVAR) {
+    declvar = expr;
+  } else
+    error("internal error");
+
   for (int i = 0; i < vector_size(lvars); i++) {
     if (!strcmp(declvar->var_name, vector_get(lvars, i)))
       error("redeclaration of %s", declvar->var_name);
@@ -83,6 +94,9 @@ static void analyze_decl(Node *node, Map *env) {
   declvar->ty->size = size;
   declvar->ty->offset = offset + size;
   map_push(env, declvar->var_name, (void *)declvar->ty);
+
+  if (expr->type == OP_ASSGIN)
+    analyze_expr(expr->right, env);
 }
 
 static void analyze_addr(Node *node, Map *env) {

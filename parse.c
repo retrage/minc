@@ -247,7 +247,16 @@ static Node *read_decl(void) {
   Node *node = malloc(sizeof(Node));
   node->type = AST_DECL;
   node->declvar = read_expr();
-  node->declvar->expr->ty = ty;
+
+  Node *expr = node->declvar->expr;
+  if (expr->type == OP_ASSGIN) {
+    if (expr->left->type != AST_LVAR)
+      error("AST_LVAR expected");
+    expr->left->ty = ty;
+  } else if (expr->type == AST_LVAR)
+    expr->ty = ty;
+  else
+    error("OP_ASSGIN or AST_LVAR expected");
 
   return node;
 }
