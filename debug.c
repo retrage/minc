@@ -142,6 +142,11 @@ char *node2s(Node *node) {
     case OP_GE:
     case OP_EQ:
     case OP_NEQ:
+    case OP_AND:
+    case OP_XOR:
+    case OP_OR:
+    case OP_LOG_AND:
+    case OP_LOG_OR:
     case OP_ASSGIN:
     case OP_ADD:
     case OP_SUB:
