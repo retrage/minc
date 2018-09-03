@@ -74,6 +74,9 @@ static char *op2s(int type) {
 }
 
 static char *vec2s(Vector *vec) {
+  if (vector_size(vec) == 0)
+    return "";
+
   Buffer *res = buffer_new();
 
   for (int i = 0; i < vector_size(vec); i++) {
