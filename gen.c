@@ -29,112 +29,94 @@ static void emit_func_epilogue(Node *);
 char *lregs[] = { "edi", "esi", "edx", "ecx", "r8d", "r9d" };
 char *qregs[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
 
-static int ret_label = 0;
-static int label_idx = 0;
-
-static int label(void) { return ++label_idx; }
-
 static void emit_if(Node *node) {
   if (node->type != AST_IF)
     error("internal error");
 
   emit_expr(node->cond);
 
-  int label_then = label();
-  int label_els = label();
-  int label_end = label();
   printf("\tcmp $0, %%rax\n");
-  printf("\tje .L%d\n", label_els);
+  printf("\tje %s\n", node->els->label);
 
-  printf(".L%d:\n", label_then);
+  printf("%s:\n", node->then->label);
   emit_expr(node->then);
-  printf("\tjmp .L%d\n", label_end);
+  printf("\tjmp %s\n", node->label);
 
-  printf(".L%d:\n", label_els);
-  if (node->els)
-    emit_expr(node->els);
+  printf("%s:\n", node->els->label);
+  emit_expr(node->els);
 
-  printf(".L%d:\n", label_end);
+  printf("%s:\n", node->label);
 }
 
 static void emit_while(Node *node) {
   if (node->type != AST_WHILE)
     error("internal error");
 
-  int label_begin = label();
-  int label_end = label();
-
-  printf(".L%d:\n", label_begin);
+  printf("%s:\n", node->cond->label);
 
   emit_expr(node->cond);
 
   printf("\tcmp $0, %%rax\n");
-  printf("\tje .L%d\n", label_end);
+  printf("\tje %s\n", node->label);
 
   emit_expr(node->then);
 
-  printf("\tjmp .L%d\n", label_begin);
+  printf("\tjmp %s\n", node->cond->label);
 
-  printf(".L%d:\n", label_end);
+  printf("%s:\n", node->label);
 }
 
 static void emit_do_while(Node *node) {
   if (node->type != AST_DO_WHILE)
     error("internal error");
 
-  int label_begin = label();
-  int label_end = label();
-
-  printf(".L%d:\n", label_begin);
+  printf("%s:\n", node->then->label);
 
   emit_expr(node->then);
 
   emit_expr(node->cond);
 
   printf("\tcmp $0, %%rax\n");
-  printf("\tje .L%d\n", label_end);
+  printf("\tje %s\n", node->label);
 
-  printf("\tjmp .L%d\n", label_begin);
+  printf("\tjmp %s\n", node->then->label);
 
-  printf(".L%d:\n", label_end);
+  printf("%s:\n", node->label);
 }
 
 static void emit_for(Node *node) {
   if (node->type != AST_FOR)
     error("internal error");
 
-  int label_begin = label();
-  int label_end = label();
-
   emit_expr(node->init);
 
-  printf(".L%d:\n", label_begin);
+  printf("%s:\n", node->cond->label);
 
   emit_expr(node->cond);
 
   printf("\tcmp $0, %%rax\n");
-  printf("\tje .L%d\n", label_end);
+  printf("\tje %s\n", node->label);
 
   emit_expr(node->then);
   emit_expr(node->incdec);
 
-  printf("\tjmp .L%d\n", label_begin);
+  printf("\tjmp %s\n", node->cond->label);
 
-  printf(".L%d:\n", label_end);
+  printf("%s:\n", node->label);
 }
 
 static void emit_goto(Node *node) {
   if (node->type != AST_GOTO)
     error("internal error");
 
-  printf("\tjmp .L%s\n", node->label);
+  printf("\tjmp %s\n", node->dest);
 }
 
 static void emit_label(Node *node) {
   if (node->type != AST_LABEL)
     error("internal error");
 
-  printf(".L%s:\n", node->label);
+  printf("%s:\n", node->label);
 }
 
 static void emit_decl(Node *node) {
@@ -211,7 +193,7 @@ static void emit_return(Node *node) {
 
   emit_rvalue(node->retval);
 
-  printf("\tjmp .L%d\n", ret_label);
+  printf("\tjmp %s\n", node->retlabel);
 }
 
 static void emit_lvalue(Node *node) {
@@ -295,26 +277,20 @@ static void emit_op(Node *node) {
       printf("\torl %%edi, %%eax\n");
       break;
     case OP_LOG_AND:
-      {
-      int label_end = label();
       printf("\tcmpl $0, %%edi\n");
-      printf("\tje .L%d\n", label_end);
+      printf("\tje %s\n", node->label);
       printf("\tcmpl $0, %%eax\n");
-      printf("\tje .L%d\n", label_end);
+      printf("\tje %s\n", node->label);
       printf("\tmov1 $1, %%eax\n");
-      printf(".L%d:\n", label_end);
-      }
+      printf("%s:\n", node->label);
       break;
     case OP_LOG_OR:
-      {
-      int label_end = label();
       printf("\tcmpl $1, %%edi\n");
-      printf("\tjne .L%d\n", label_end);
+      printf("\tjne %s\n", node->label);
       printf("\tcmpl $1, %%eax\n");
-      printf("\tjne .L%d\n", label_end);
+      printf("\tjne %s\n", node->label);
       printf("\tmov1 $0, %%eax\n");
-      printf(".L%d:\n", label_end);
-      }
+      printf("%s:\n", node->label);
       break;
     case OP_ADD:
       printf("\taddl %%edi, %%eax\n");
@@ -410,8 +386,6 @@ static void emit_func_prologue(Node *node) {
   printf("\tpush %%rbp\n");
   printf("\tmov %%rsp, %%rbp\n");
 
-  ret_label = label();
-
   int offset = calc_offset(node->env->lvars);
   if (offset > 0)
     printf("\tsub $%d, %%rsp\n", offset);
@@ -440,7 +414,7 @@ static void emit_func_epilogue(Node *node) {
   if (node->type != AST_FUNC)
     error("internal error");
 
-  printf(".L%d:\n", ret_label);
+  printf("%s:\n", node->label);
 
   int offset = calc_offset(node->env->lvars);
   if (offset > 0)

@@ -1,5 +1,6 @@
 #include "minc.h"
 
+static void scan_label(Node *, Env *);
 static void analyze_func_call(Node *, Env *);
 static void analyze_if(Node *, Env *);
 static void analyze_while(Node *, Env *);
@@ -16,6 +17,42 @@ static void analyze_op(Node *, Env *);
 static void analyze_expr(Node *, Env *);
 static void analyze_comp_stmt(Node *, Env *);
 static void analyze_func(Node *, Env *);
+
+static int label_idx = 0;
+static char *retlabel;
+
+static void add_label(Node *node) {
+  node->label = format(".L%d", ++label_idx);
+}
+
+static void scan_label(Node *node, Env *env) {
+  switch (node->type) {
+    case AST_FUNC:
+      scan_label(node->body, env);
+      break;
+    case AST_COMP_STMT:
+      for (int i = 0; i < vector_size(node->stmts); i++)
+        scan_label(vector_get(node->stmts, i), env);
+      break;
+    case AST_EXPR:
+      scan_label(node->expr, env);
+      break;
+    case AST_IF:
+      scan_label(node->then, env);
+      if (node->els)
+        scan_label(node->els, env);
+      break;
+    case AST_WHILE:
+    case AST_DO_WHILE:
+    case AST_FOR:
+      scan_label(node->then, env);
+      break;
+    case AST_LABEL:
+      add_label(node);
+      map_push(env->labels, node->str_value, node);
+      break;
+  }
+}
 
 static void analyze_func_call(Node *node, Env *env) {
   if (node->type != AST_FUNC_CALL)
@@ -36,8 +73,12 @@ static void analyze_if(Node *node, Env *env) {
 
   analyze_expr(node->cond, env);
   analyze_comp_stmt(node->then, env);
-  if (node->els)
-    analyze_comp_stmt(node->els, env);
+  add_label(node->then);
+  analyze_comp_stmt(node->els, env);
+  add_label(node->els);
+
+  /* XXX: node->label represents end of the statement */
+  add_label(node);
 }
 
 static void analyze_while(Node *node, Env *env) {
@@ -45,7 +86,10 @@ static void analyze_while(Node *node, Env *env) {
     error("internal error");
 
   analyze_expr(node->cond, env);
+  add_label(node->cond);
   analyze_comp_stmt(node->then, env);
+  /* XXX: node->label represents end of the statement */
+  add_label(node);
 }
 
 static void analyze_do_while(Node *node, Env *env) {
@@ -53,7 +97,10 @@ static void analyze_do_while(Node *node, Env *env) {
     error("internal error");
 
   analyze_comp_stmt(node->then, env);
+  add_label(node->then);
   analyze_expr(node->cond, env);
+  /* XXX: node->label represents end of the statement */
+  add_label(node);
 }
 
 static void analyze_for(Node *node, Env *env) {
@@ -62,19 +109,41 @@ static void analyze_for(Node *node, Env *env) {
 
   analyze_expr(node->init, env);
   analyze_expr(node->cond, env);
+  add_label(node->cond);
   analyze_expr(node->incdec, env);
   analyze_comp_stmt(node->then, env);
+  /* XXX: node->label represents end of the statement */
+  add_label(node);
 }
 
 static void analyze_goto(Node *node, Env *env) {
   if (node->type != AST_GOTO)
     error("internal error");
-  /* FIXME: check if label exists */
+
+  Vector *keys = map_keys(env->labels);
+  for (int i = 0; i < vector_size(keys); i++) {
+    char *key = vector_get(keys, i);
+    if (!strcmp(node->dest, key)) {
+      /* XXX: overwrite node->dest */
+      Node *label = map_get(env->labels, key);
+      node->dest = label->label;
+      return;
+    }
+  }
+  error("label '%s' used but not defined", node->dest);
 }
 
 static void analyze_label(Node *node, Env *env) {
   if (node->type != AST_LABEL)
     error("internal error");
+
+  Vector *keys = map_keys(env->labels);
+  for (int i = 0; i < vector_size(keys); i++) {
+    char *key = vector_get(keys, i);
+    if (!strcmp(node->str_value, key))
+      return;
+  }
+  error("internal error");
 }
 
 static void analyze_decl(Node *node, Env *env) {
@@ -165,6 +234,14 @@ static void analyze_lvar(Node *node, Env *env) {
     error("%s undeclared", node->var_name);
 }
 
+static void analyze_return(Node *node, Env *env) {
+  if (node->type != AST_RETURN)
+    error("internal error");
+
+  analyze_expr(node->retval, env);
+  node->retlabel = retlabel;
+}
+
 static void analyze_op(Node *node, Env *env) {
   switch (node->type) {
     case OP_ASSGIN:
@@ -192,6 +269,8 @@ static void analyze_op(Node *node, Env *env) {
     case OP_REM:
     case OP_SHL:
     case OP_SHR:
+      if (node->type == OP_LOG_AND || node->type == OP_LOG_OR)
+        add_label(node);
       analyze_expr(node->left, env);
       analyze_expr(node->right, env);
       break;
@@ -201,21 +280,13 @@ static void analyze_op(Node *node, Env *env) {
 }
 
 static void analyze_expr(Node *node, Env *env) {
-  if (node->type == AST_RETURN) {
-    analyze_expr(node->retval, env);
-    return;
-  } else if (node->type == AST_EXPR) {
-    analyze_expr(node->expr, env);
-    return;
-  }
-
   switch (node->type) {
     case AST_FUNC_CALL: analyze_func_call(node, env); break;
     case AST_COMP_STMT: analyze_comp_stmt(node, env); break;
     case AST_LITERAL:   analyze_literal(node, env);   break;
     case AST_LVAR:      analyze_lvar(node, env);      break;
-    case AST_EXPR:      analyze_expr(node, env);      break;
-    case AST_RETURN:    error("return must be unique in expr"); break;
+    case AST_EXPR:      analyze_expr(node->expr, env);break;
+    case AST_RETURN:    analyze_return(node, env);    break;
     case AST_IF:        analyze_if(node, env);        break;
     case AST_WHILE:     analyze_while(node, env);     break;
     case AST_DO_WHILE:  analyze_do_while(node, env);  break;
@@ -267,6 +338,9 @@ static void analyze_func(Node *node, Env *env) {
     map_push(env->lvars, arg->expr->var_name, (void *)arg->expr->ty);
   }
 
+  /* XXX: node->label represents end of the statement */
+  add_label(node);
+  retlabel = node->label;
   analyze_comp_stmt(node->body, env);
 }
 
@@ -275,7 +349,10 @@ void analyze_toplevel(Vector *toplevels) {
     Node *node = vector_get(toplevels, i);
     node->env = malloc(sizeof(Env));
     node->env->lvars = map_new();
-    node->env->labels = vector_new();
+    node->env->labels = map_new();
+
+    scan_label(node, node->env);
+
     if (node->type == AST_FUNC)
       analyze_func(node, node->env);
     else

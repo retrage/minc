@@ -175,7 +175,9 @@ static Node *read_if(void) {
     else
       node->els = comp_stmt_from_expr();
   } else {
-    node->els = NULL;
+    node->els = malloc(sizeof(Node));
+    node->els->type = AST_COMP_STMT;
+    node->els->stmts = vector_new();
   }
 
   node->init = NULL;
@@ -291,7 +293,7 @@ static Node *read_goto(void) {
   token = next(); /* read TIDENT */
   Node *node = malloc(sizeof(Node));
   node->type = AST_GOTO;
-  node->label = token->sval;
+  node->dest = token->sval;
 
   return node;
 }
@@ -305,7 +307,7 @@ static Node *read_label(void) {
   token = next();
   Node *node = malloc(sizeof(Node));
   node->type = AST_LABEL;
-  node->label = token->sval;
+  node->str_value = token->sval;
   token = next(); /* read ":" */
 
   return node;

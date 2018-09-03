@@ -109,11 +109,12 @@ typedef struct Type {
 
 typedef struct Env {
   Map *lvars;
-  Vector *labels;
+  Map *labels;
 } Env;
 
 typedef struct Node {
   int type;
+  char *label;
   union {
     /* Function declaration and Call */
     struct {
@@ -131,13 +132,18 @@ typedef struct Node {
     };
     /* Integer */
     int int_value;
+    /* Label */
+    char *str_value;
     /* Local variable */
     struct {
       char *var_name;
       Type *ty;
     };
     /* Return */
-    struct Node *retval;
+    struct {
+      struct Node *retval;
+      char *retlabel;
+    };
     /* Expression */
     struct Node *expr;
     /* If statement, While, For */
@@ -148,10 +154,8 @@ typedef struct Node {
       struct Node *then;
       struct Node *els;
     };
-    /* Goto, Label */
-    struct {
-      char *label;
-    };
+    /* Goto */
+    char *dest;
     /* Declaration */
     struct {
       struct Node *declvar;
