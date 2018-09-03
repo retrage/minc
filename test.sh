@@ -7,6 +7,7 @@ runtest() {
     ./tmp.exe
     out=$?
     if [ "$out" != "$2" ]; then
+        echo "$1" > tmp
         echo "$1: $2 expected, but got $out"
         exit 1
     fi
@@ -22,6 +23,7 @@ calltest() {
 
     out=`./tmp.exe`
     if [ "$out" != "$3" ]; then
+        echo "$1" > tmp
         echo "$1: $3 expected, but got $out"
         exit 1
     fi
