@@ -10,6 +10,8 @@ static Node *read_func_call(void);
 static Node *read_if(void);
 static Node *read_while(void);
 static Node *read_for(void);
+static Node *read_goto(void);
+static Node *read_label(void);
 static Node *read_decl(void);
 static Node *read_ident(void);
 static Node *read_term(void);
@@ -235,6 +237,36 @@ static Node *read_for(void) {
     node->then = comp_stmt_from_expr();
 
   node->els = NULL;
+
+  return node;
+}
+
+static Node *read_goto(void) {
+  if (!((token + 1)->id == KGOTO && (token + 2)->type == TIDENT)) {
+    error("goto TIDENT expected");
+    return NULL;
+  }
+
+  token = next(); /* read "goto" */
+  token = next(); /* read TIDENT */
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_GOTO;
+  node->label = token->sval;
+
+  return node;
+}
+
+static Node *read_label(void) {
+  if (!((token + 1)->type == TIDENT && tokscmp((token + 2), ":"))) {
+    error("TIDENT: expected");
+    return NULL;
+  }
+
+  token = next();
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_LABEL;
+  node->label = token->sval;
+  token = next(); /* read ":" */
 
   return node;
 }
@@ -617,13 +649,19 @@ static Node *read_expr(void) {
     return read_while();
   } else if ((token + 1)->id == KFOR) {
     return read_for();
+  } else if ((token + 1)->id == KGOTO) {
+    return read_goto();
   } else if ((token + 1)->id == KINT) {
     return read_decl();
   } else {
-    Node *node = malloc(sizeof(Node));
-    node->type = AST_EXPR;
-    node->expr = read_assgin();
-    return node;
+    if ((token + 1)->type == TIDENT && tokscmp((token + 2), ":"))
+      return read_label();
+    else {
+      Node *node = malloc(sizeof(Node));
+      node->type = AST_EXPR;
+      node->expr = read_assgin();
+      return node;
+    }
   }
 }
 

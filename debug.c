@@ -118,6 +118,10 @@ char *node2s(Node *node) {
       return format("(for init=%s cond=%s incdec=%s then=%s)",
               node2s(node->init), node2s(node->cond),
               node2s(node->incdec), node2s(node->then));
+    case AST_GOTO:
+      return format("(goto label=%s)", node->label);
+    case AST_LABEL:
+      return format("(label %s)", node->label);
     case AST_DECL:
       return format("(decl declvar=%s)", node2s(node->declvar));
     case AST_ADDR:

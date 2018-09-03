@@ -1,20 +1,22 @@
 #include "minc.h"
 
-static void analyze_func_call(Node *, Map *);
-static void analyze_if(Node *, Map *);
-static void analyze_while(Node *, Map *);
-static void analyze_for(Node *, Map *);
-static void analyze_decl(Node *, Map *);
-static void analyze_addr(Node *, Map *);
-static void analyze_deref(Node *, Map *);
-static void analyze_literal(Node *, Map *);
-static void analyze_lvar(Node *, Map *);
-static void analyze_op(Node *, Map *);
-static void analyze_expr(Node *, Map *);
-static void analyze_comp_stmt(Node *, Map *);
-static void analyze_func(Node *, Map *);
+static void analyze_func_call(Node *, Env *);
+static void analyze_if(Node *, Env *);
+static void analyze_while(Node *, Env *);
+static void analyze_for(Node *, Env *);
+static void analyze_goto(Node *, Env *);
+static void analyze_label(Node *, Env *);
+static void analyze_decl(Node *, Env *);
+static void analyze_addr(Node *, Env *);
+static void analyze_deref(Node *, Env *);
+static void analyze_literal(Node *, Env *);
+static void analyze_lvar(Node *, Env *);
+static void analyze_op(Node *, Env *);
+static void analyze_expr(Node *, Env *);
+static void analyze_comp_stmt(Node *, Env *);
+static void analyze_func(Node *, Env *);
 
-static void analyze_func_call(Node *node, Map *env) {
+static void analyze_func_call(Node *node, Env *env) {
   if (node->type != AST_FUNC_CALL)
     error("internal error");
 
@@ -27,7 +29,7 @@ static void analyze_func_call(Node *node, Map *env) {
   }
 }
 
-static void analyze_if(Node *node, Map *env) {
+static void analyze_if(Node *node, Env *env) {
   if (node->type != AST_IF)
     error("internal error");
 
@@ -37,7 +39,7 @@ static void analyze_if(Node *node, Map *env) {
     analyze_comp_stmt(node->els, env);
 }
 
-static void analyze_while(Node *node, Map *env) {
+static void analyze_while(Node *node, Env *env) {
   if (node->type != AST_WHILE)
     error("internal error");
 
@@ -45,7 +47,7 @@ static void analyze_while(Node *node, Map *env) {
   analyze_comp_stmt(node->then, env);
 }
 
-static void analyze_for(Node *node, Map *env) {
+static void analyze_for(Node *node, Env *env) {
   if (node->type != AST_FOR)
     error("internal error");
 
@@ -55,11 +57,29 @@ static void analyze_for(Node *node, Map *env) {
   analyze_comp_stmt(node->then, env);
 }
 
-static void analyze_decl(Node *node, Map *env) {
+static void analyze_goto(Node *node, Env *env) {
+  if (node->type != AST_GOTO)
+    error("internal error");
+
+  /*
+  for (int i = 0; i < vector_size(env->labels); i++) {
+    if (!strcmp(node->label, vector_get(env->labels, i)))
+      return;
+  }
+  error("label '%s' used but not defined", node->label);
+  */
+}
+
+static void analyze_label(Node *node, Env *env) {
+  if (node->type != AST_LABEL)
+    error("internal error");
+}
+
+static void analyze_decl(Node *node, Env *env) {
   if (node->type != AST_DECL)
     error("internal error");
 
-  Vector *lvars = map_keys(env);
+  Vector *lvars = map_keys(env->lvars);
   Node *declvar;
 
   Node *expr = node->declvar->expr;
@@ -78,7 +98,7 @@ static void analyze_decl(Node *node, Map *env) {
   }
 
   int size;
-  int offset = calc_offset(env);
+  int offset = calc_offset(env->lvars);
   switch (declvar->ty->ty) {
     case TYINT:
       size = 4;
@@ -93,13 +113,13 @@ static void analyze_decl(Node *node, Map *env) {
 
   declvar->ty->size = size;
   declvar->ty->offset = offset + size;
-  map_push(env, declvar->var_name, (void *)declvar->ty);
+  map_push(env->lvars, declvar->var_name, (void *)declvar->ty);
 
   if (expr->type == OP_ASSGIN)
     analyze_expr(expr->right, env);
 }
 
-static void analyze_addr(Node *node, Map *env) {
+static void analyze_addr(Node *node, Env *env) {
   if (node->type != AST_ADDR)
     error("internal error");
 
@@ -107,43 +127,43 @@ static void analyze_addr(Node *node, Map *env) {
   if (expr->type != AST_LVAR)
     error("lvalue required as unary '&' operand");
 
-  Type *ty = map_get(env, expr->var_name);
+  Type *ty = map_get(env->lvars, expr->var_name);
   if (ty)
     expr->ty = ty;
   else
     error("%s undeclared", expr->var_name);
 }
 
-static void analyze_deref(Node *node, Map *env) {
+static void analyze_deref(Node *node, Env *env) {
   if (node->type != AST_DEREF)
     error("internal error");
 
   /* FIXME: check if operand represents address */
   Node *expr = node->operand->expr;
-  Type *ty = map_get(env, expr->var_name);
+  Type *ty = map_get(env->lvars, expr->var_name);
   if (ty)
     expr->ty = ty;
   else
     error("%s undeclared", expr->var_name);
 }
 
-static void analyze_literal(Node *node, Map *env) {
+static void analyze_literal(Node *node, Env *env) {
   if (node->type != AST_LITERAL)
     error("internal error");
 }
 
-static void analyze_lvar(Node *node, Map *env) {
+static void analyze_lvar(Node *node, Env *env) {
   if (node->type != AST_LVAR)
     error("internal error");
 
-  Type *ty = map_get(env, node->var_name);
+  Type *ty = map_get(env->lvars, node->var_name);
   if (ty)
     node->ty = ty;
   else
     error("%s undeclared", node->var_name);
 }
 
-static void analyze_op(Node *node, Map *env) {
+static void analyze_op(Node *node, Env *env) {
   switch (node->type) {
     case OP_ASSGIN:
       /* FIXME: check if valid lvalue */
@@ -178,7 +198,7 @@ static void analyze_op(Node *node, Map *env) {
   }
 }
 
-static void analyze_expr(Node *node, Map *env) {
+static void analyze_expr(Node *node, Env *env) {
   if (node->type == AST_RETURN) {
     analyze_expr(node->retval, env);
     return;
@@ -197,6 +217,8 @@ static void analyze_expr(Node *node, Map *env) {
     case AST_IF:        analyze_if(node, env);        break;
     case AST_WHILE:     analyze_while(node, env);     break;
     case AST_FOR:       analyze_for(node, env);       break;
+    case AST_GOTO:      analyze_goto(node, env);      break;
+    case AST_LABEL:     analyze_label(node, env);     break;
     case AST_DECL:      analyze_decl(node, env);      break;
     case AST_ADDR:      analyze_addr(node, env);      break;
     case AST_DEREF:     analyze_deref(node, env);     break;
@@ -204,7 +226,7 @@ static void analyze_expr(Node *node, Map *env) {
   }
 }
 
-static void analyze_comp_stmt(Node *node, Map *env) {
+static void analyze_comp_stmt(Node *node, Env *env) {
   if (node->type != AST_COMP_STMT)
     error("internal error");
 
@@ -213,7 +235,7 @@ static void analyze_comp_stmt(Node *node, Map *env) {
   }
 }
 
-static void analyze_func(Node *node, Map *env) {
+static void analyze_func(Node *node, Env *env) {
   if (node->type != AST_FUNC)
     error("internal error");
 
@@ -226,7 +248,7 @@ static void analyze_func(Node *node, Map *env) {
       error("invalid parameter %s", node2s(arg));
 
     int size;
-    int offset = calc_offset(env);
+    int offset = calc_offset(env->lvars);
     switch (arg->expr->ty->ty) {
       case TYINT:
         size = 4;
@@ -239,7 +261,7 @@ static void analyze_func(Node *node, Map *env) {
     }
     arg->expr->ty->size = size;
     arg->expr->ty->offset = offset + size;
-    map_push(env, arg->expr->var_name, (void *)arg->expr->ty);
+    map_push(env->lvars, arg->expr->var_name, (void *)arg->expr->ty);
   }
 
   analyze_comp_stmt(node->body, env);
@@ -248,16 +270,18 @@ static void analyze_func(Node *node, Map *env) {
 void analyze_toplevel(Vector *toplevels) {
   for (int i = 0; i < vector_size(toplevels); i++) {
     Node *node = vector_get(toplevels, i);
-    node->env = map_new();
+    node->env = malloc(sizeof(Env));
+    node->env->lvars = map_new();
+    node->env->labels = vector_new();
     if (node->type == AST_FUNC)
       analyze_func(node, node->env);
     else
       error("internal error");
 
-    Vector *keys = map_keys(node->env);
+    Vector *keys = map_keys(node->env->lvars);
     for (int k = 0; k < vector_size(keys); k++) {
       char *key = vector_get(keys, k);
-      Type *ty = map_get(node->env, key);
+      Type *ty = map_get(node->env->lvars, key);
       printf("# %s: %d %d\n", key, ty->size, ty->offset);
     }
   }

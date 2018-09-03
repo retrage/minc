@@ -42,6 +42,7 @@ enum {
   KELSE,
   KWHILE,
   KFOR,
+  KGOTO,
   KINT,
 };
 
@@ -63,6 +64,8 @@ enum {
   AST_IF,
   AST_WHILE,
   AST_FOR,
+  AST_GOTO,
+  AST_LABEL,
   AST_DECL,
   AST_ADDR,
   AST_DEREF,
@@ -102,13 +105,18 @@ typedef struct Type {
   int offset;
 } Type;
 
+typedef struct Env {
+  Map *lvars;
+  Vector *labels;
+} Env;
+
 typedef struct Node {
   int type;
   union {
     /* Function declaration and Call */
     struct {
       char *func_name;
-      Map *env;
+      Env *env;
       struct Node *body;
       Vector *arguments;
     };
@@ -137,6 +145,10 @@ typedef struct Node {
       struct Node *incdec;
       struct Node *then;
       struct Node *els;
+    };
+    /* Goto, Label */
+    struct {
+      char *label;
     };
     /* Declaration */
     struct {

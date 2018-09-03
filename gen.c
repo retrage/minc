@@ -7,6 +7,8 @@
 static void emit_if(Node *);
 static void emit_while(Node *);
 static void emit_for(Node *);
+static void emit_goto(Node *);
+static void emit_label(Node *);
 static void emit_decl(Node *);
 static void emit_addr(Node *);
 static void emit_deref(Node *);
@@ -97,6 +99,20 @@ static void emit_for(Node *node) {
   printf("\tjmp .L%d\n", label_begin);
 
   printf(".L%d:\n", label_end);
+}
+
+static void emit_goto(Node *node) {
+  if (node->type != AST_GOTO)
+    error("internal error");
+
+  printf("\tjmp .L%s\n", node->label);
+}
+
+static void emit_label(Node *node) {
+  if (node->type != AST_LABEL)
+    error("internal error");
+
+  printf(".L%s:\n", node->label);
 }
 
 static void emit_decl(Node *node) {
@@ -325,6 +341,8 @@ static void emit_expr(Node *node) {
     case AST_IF:        emit_if(node);        break;
     case AST_WHILE:     emit_while(node);     break;
     case AST_FOR:       emit_for(node);       break;
+    case AST_GOTO:      emit_goto(node);      break;
+    case AST_LABEL:     emit_label(node);     break;
     case AST_DECL:      emit_decl(node);      break;
     case AST_ADDR:      emit_addr(node);      break;
     case AST_DEREF:     emit_deref(node);     break;
@@ -371,13 +389,13 @@ static void emit_func_prologue(Node *node) {
 
   ret_label = label();
 
-  int offset = calc_offset(node->env);
+  int offset = calc_offset(node->env->lvars);
   if (offset > 0)
     printf("\tsub $%d, %%rsp\n", offset);
 
   for (int i = 0; i < vector_size(node->arguments); i++) {
     Node *arg = vector_get(node->arguments, i);
-    Type *ty = map_get(node->env, arg->expr->var_name);
+    Type *ty = map_get(node->env->lvars, arg->expr->var_name);
     int offset = ty->offset;
     char *regs;
     switch (ty->ty) {
@@ -401,7 +419,7 @@ static void emit_func_epilogue(Node *node) {
 
   printf(".L%d:\n", ret_label);
 
-  int offset = calc_offset(node->env);
+  int offset = calc_offset(node->env->lvars);
   if (offset > 0)
     printf("\tadd $%d, %%rsp\n", offset);
 
