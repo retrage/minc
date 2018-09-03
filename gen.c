@@ -6,6 +6,7 @@
 
 static void emit_if(Node *);
 static void emit_while(Node *);
+static void emit_do_while(Node *);
 static void emit_for(Node *);
 static void emit_goto(Node *);
 static void emit_label(Node *);
@@ -71,6 +72,27 @@ static void emit_while(Node *node) {
   printf("\tje .L%d\n", label_end);
 
   emit_expr(node->then);
+
+  printf("\tjmp .L%d\n", label_begin);
+
+  printf(".L%d:\n", label_end);
+}
+
+static void emit_do_while(Node *node) {
+  if (node->type != AST_DO_WHILE)
+    error("internal error");
+
+  int label_begin = label();
+  int label_end = label();
+
+  printf(".L%d:\n", label_begin);
+
+  emit_expr(node->then);
+
+  emit_expr(node->cond);
+
+  printf("\tcmp $0, %%rax\n");
+  printf("\tje .L%d\n", label_end);
 
   printf("\tjmp .L%d\n", label_begin);
 
@@ -340,6 +362,7 @@ static void emit_expr(Node *node) {
     case AST_RETURN:    emit_return(node);    break;
     case AST_IF:        emit_if(node);        break;
     case AST_WHILE:     emit_while(node);     break;
+    case AST_DO_WHILE:  emit_do_while(node);  break;
     case AST_FOR:       emit_for(node);       break;
     case AST_GOTO:      emit_goto(node);      break;
     case AST_LABEL:     emit_label(node);     break;

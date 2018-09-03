@@ -114,6 +114,9 @@ char *node2s(Node *node) {
     case AST_WHILE:
       return format("(while cond=%s then=%s)",
               node2s(node->cond), node2s(node->then));
+    case AST_DO_WHILE:
+      return format("(do then=%s cond=%s)",
+              node2s(node->then), node2s(node->cond));
     case AST_FOR:
       return format("(for init=%s cond=%s incdec=%s then=%s)",
               node2s(node->init), node2s(node->cond),

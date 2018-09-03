@@ -9,6 +9,7 @@ static Node *read_return(void);
 static Node *read_func_call(void);
 static Node *read_if(void);
 static Node *read_while(void);
+static Node *read_do_while(void);
 static Node *read_for(void);
 static Node *read_goto(void);
 static Node *read_label(void);
@@ -203,6 +204,45 @@ static Node *read_while(void) {
     node->then = read_comp_stmt();
   else
     node->then = comp_stmt_from_expr();
+
+  node->init = NULL;
+  node->incdec = NULL;
+  node->els = NULL;
+
+  return node;
+}
+
+static Node *read_do_while(void) {
+  if ((token + 1)->id != KDO) {
+    error("do expected");
+    return NULL;
+  }
+
+  token = next(); /* read "do" */
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_DO_WHILE;
+
+  if (tokscmp((token + 1), "{"))
+    node->then = read_comp_stmt();
+  else
+    node->then = comp_stmt_from_expr();
+
+  if (!((token + 1)->id == KWHILE && tokscmp((token + 2), "("))) {
+    error("while ( expected");
+    return NULL;
+  }
+
+  token = next(); /* read "while" */
+  token = next(); /* read "(" */
+  node->cond = read_expr();
+
+  if (!tokscmp((token + 1), ")"))
+    error(") expected");
+  token = next();
+
+  if (!tokscmp((token + 1), ";"))
+    error("; expected");
+  token = next();
 
   node->init = NULL;
   node->incdec = NULL;
@@ -647,6 +687,8 @@ static Node *read_expr(void) {
     return read_if();
   } else if ((token + 1)->id == KWHILE) {
     return read_while();
+  } else if ((token + 1)->id == KDO) {
+    return read_do_while();
   } else if ((token + 1)->id == KFOR) {
     return read_for();
   } else if ((token + 1)->id == KGOTO) {

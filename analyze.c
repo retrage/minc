@@ -3,6 +3,7 @@
 static void analyze_func_call(Node *, Env *);
 static void analyze_if(Node *, Env *);
 static void analyze_while(Node *, Env *);
+static void analyze_do_while(Node *, Env *);
 static void analyze_for(Node *, Env *);
 static void analyze_goto(Node *, Env *);
 static void analyze_label(Node *, Env *);
@@ -45,6 +46,14 @@ static void analyze_while(Node *node, Env *env) {
 
   analyze_expr(node->cond, env);
   analyze_comp_stmt(node->then, env);
+}
+
+static void analyze_do_while(Node *node, Env *env) {
+  if (node->type != AST_DO_WHILE)
+    error("internal error");
+
+  analyze_comp_stmt(node->then, env);
+  analyze_expr(node->cond, env);
 }
 
 static void analyze_for(Node *node, Env *env) {
@@ -209,6 +218,7 @@ static void analyze_expr(Node *node, Env *env) {
     case AST_RETURN:    error("return must be unique in expr"); break;
     case AST_IF:        analyze_if(node, env);        break;
     case AST_WHILE:     analyze_while(node, env);     break;
+    case AST_DO_WHILE:  analyze_do_while(node, env);  break;
     case AST_FOR:       analyze_for(node, env);       break;
     case AST_GOTO:      analyze_goto(node, env);      break;
     case AST_LABEL:     analyze_label(node, env);     break;

@@ -100,6 +100,9 @@ static void read_string(void) {
         } else if (!strcmp(string, "while")) {
           tokens[token_pos].type = TKEYWORD;
           tokens[token_pos].id = KWHILE;
+        } else if (!strcmp(string, "do")) {
+          tokens[token_pos].type = TKEYWORD;
+          tokens[token_pos].id = KDO;
         } else if (!strcmp(string, "for")) {
           tokens[token_pos].type = TKEYWORD;
           tokens[token_pos].id = KFOR;
