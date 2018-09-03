@@ -284,8 +284,12 @@ static void analyze_op(Node *node, Env *env) {
     case OP_REM:
     case OP_SHL:
     case OP_SHR:
-      if (node->type == OP_LOG_AND || node->type == OP_LOG_OR)
+      if (node->type == OP_LOG_AND || node->type == OP_LOG_OR) {
+        node->label_false = format(".L%d", ++label_idx);
+        node->label_true = format(".L%d", ++label_idx);
+        /* XXX: node->label represents end of the op */
         add_label(node);
+      }
       analyze_expr(node->left, env);
       analyze_expr(node->right, env);
       break;

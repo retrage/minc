@@ -60,6 +60,14 @@ runtest "int main() { return 8 >> 1; }" 4
 runtest "int main() { return 73 & 29; }" 9
 runtest "int main() { return 73 ^ 29; }" 84
 runtest "int main() { return 73 | 29; }" 93
+runtest "int main() { return 0 && 0; }" 0
+runtest "int main() { return 1 && 0; }" 0
+runtest "int main() { return 0 && 1; }" 0
+runtest "int main() { return 1 && 1; }" 1
+runtest "int main() { return 0 || 0; }" 0
+runtest "int main() { return 1 || 0; }" 1
+runtest "int main() { return 0 || 1; }" 1
+runtest "int main() { return 1 || 1; }" 1
 
 # step 2.4
 runtest "int main() { return (2+5)*2; }" 14

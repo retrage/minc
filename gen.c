@@ -286,18 +286,25 @@ static void emit_op(Node *node) {
       break;
     case OP_LOG_AND:
       printf("\tcmpl $0, %%edi\n");
-      printf("\tje %s\n", node->label);
+      printf("\tje %s\n", node->label_false);
       printf("\tcmpl $0, %%eax\n");
-      printf("\tje %s\n", node->label);
-      printf("\tmov1 $1, %%eax\n");
+      printf("\tje %s\n", node->label_false);
+      printf("\tmovl $1, %%eax\n");
+      printf("\tjmp %s\n", node->label);
+      printf("%s:\n", node->label_false);
+      printf("\tmovl $0, %%eax\n");
       printf("%s:\n", node->label);
       break;
     case OP_LOG_OR:
-      printf("\tcmpl $1, %%edi\n");
-      printf("\tjne %s\n", node->label);
-      printf("\tcmpl $1, %%eax\n");
-      printf("\tjne %s\n", node->label);
-      printf("\tmov1 $0, %%eax\n");
+      printf("\tcmpl $0, %%edi\n");
+      printf("\tjne %s\n", node->label_true);
+      printf("\tcmpl $0, %%eax\n");
+      printf("\tje %s\n", node->label_false);
+      printf("%s:\n", node->label_true);
+      printf("\tmovl $1, %%eax\n");
+      printf("\tjmp %s\n", node->label);
+      printf("%s:\n", node->label_false);
+      printf("\tmovl $0, %%eax\n");
       printf("%s:\n", node->label);
       break;
     case OP_ADD:

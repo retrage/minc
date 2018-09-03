@@ -131,6 +131,9 @@ typedef struct Node {
     struct {
       struct Node *left;
       struct Node *right;
+      /* Log and, Log or */
+      char *label_false;
+      char *label_true;
     };
     /* Integer */
     int int_value;
