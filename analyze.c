@@ -60,14 +60,7 @@ static void analyze_for(Node *node, Env *env) {
 static void analyze_goto(Node *node, Env *env) {
   if (node->type != AST_GOTO)
     error("internal error");
-
-  /*
-  for (int i = 0; i < vector_size(env->labels); i++) {
-    if (!strcmp(node->label, vector_get(env->labels, i)))
-      return;
-  }
-  error("label '%s' used but not defined", node->label);
-  */
+  /* FIXME: check if label exists */
 }
 
 static void analyze_label(Node *node, Env *env) {
