@@ -146,6 +146,9 @@ runtest "int fib(int n) { if (n == 0) { return 1; } if (n == 1) { return 1; } el
 runtest "int main() { goto a; a: return 0; }" 0
 runtest "int main() { int a; a = 1; if (a > 0) goto g1; else goto g2; g1: return 10; g2: return 20; }" 10
 runtest "int main() { int a; a = 0; do { a += 1; } while (a < 10); return a; }" 10
+runtest "int main() { int b = 0; for (int a = 0; a < 50; a += 1) { b += 2; if (a > 13) break; } return b; }" 30
+runtest "int main() { int a = 0; for (int i = 0; i < 5; i += 1) { for (int j = 0; j < 5; j += 1) { a += 1; if (a > 15) break; } } return a; }" 17
+runtest "int main() { int a = 0; for (int i = 0; i < 5; i += 1) { for (int j = 0; j < 5; j += 1) { a += 1; if (a > 15) break; } a += 2; } return a; }" 24
 
 # step 6
 

@@ -10,6 +10,7 @@ static void emit_do_while(Node *);
 static void emit_for(Node *);
 static void emit_goto(Node *);
 static void emit_label(Node *);
+static void emit_break(Node *);
 static void emit_decl(Node *);
 static void emit_addr(Node *);
 static void emit_deref(Node *);
@@ -117,6 +118,13 @@ static void emit_label(Node *node) {
     error("internal error");
 
   printf("%s:\n", node->label);
+}
+
+static void emit_break(Node *node) {
+  if (node->type != AST_BREAK)
+    error("internal error");
+
+  printf("\tjmp %s\n", node->dest);
 }
 
 static void emit_decl(Node *node) {
@@ -342,6 +350,7 @@ static void emit_expr(Node *node) {
     case AST_FOR:       emit_for(node);       break;
     case AST_GOTO:      emit_goto(node);      break;
     case AST_LABEL:     emit_label(node);     break;
+    case AST_BREAK:     emit_break(node);     break;
     case AST_DECL:      emit_decl(node);      break;
     case AST_ADDR:      emit_addr(node);      break;
     case AST_DEREF:     emit_deref(node);     break;

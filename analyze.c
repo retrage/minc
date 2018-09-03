@@ -8,6 +8,7 @@ static void analyze_do_while(Node *, Env *);
 static void analyze_for(Node *, Env *);
 static void analyze_goto(Node *, Env *);
 static void analyze_label(Node *, Env *);
+static void analyze_break(Node *, Env *);
 static void analyze_decl(Node *, Env *);
 static void analyze_addr(Node *, Env *);
 static void analyze_deref(Node *, Env *);
@@ -20,6 +21,7 @@ static void analyze_func(Node *, Env *);
 
 static int label_idx = 0;
 static char *retlabel;
+static Vector *controls;
 
 static void add_label(Node *node) {
   node->label = format(".L%d", ++label_idx);
@@ -71,49 +73,54 @@ static void analyze_if(Node *node, Env *env) {
   if (node->type != AST_IF)
     error("internal error");
 
+  /* XXX: node->label represents end of the statement */
+  add_label(node);
   analyze_expr(node->cond, env);
   analyze_comp_stmt(node->then, env);
   add_label(node->then);
   analyze_comp_stmt(node->els, env);
   add_label(node->els);
-
-  /* XXX: node->label represents end of the statement */
-  add_label(node);
 }
 
 static void analyze_while(Node *node, Env *env) {
   if (node->type != AST_WHILE)
     error("internal error");
 
+  vector_push(controls, node);
+  /* XXX: node->label represents end of the statement */
+  add_label(node);
   analyze_expr(node->cond, env);
   add_label(node->cond);
   analyze_comp_stmt(node->then, env);
-  /* XXX: node->label represents end of the statement */
-  add_label(node);
+  vector_pop(controls);
 }
 
 static void analyze_do_while(Node *node, Env *env) {
   if (node->type != AST_DO_WHILE)
     error("internal error");
 
+  vector_push(controls, node);
+  /* XXX: node->label represents end of the statement */
+  add_label(node);
   analyze_comp_stmt(node->then, env);
   add_label(node->then);
   analyze_expr(node->cond, env);
-  /* XXX: node->label represents end of the statement */
-  add_label(node);
+  vector_pop(controls);
 }
 
 static void analyze_for(Node *node, Env *env) {
   if (node->type != AST_FOR)
     error("internal error");
 
+  vector_push(controls, node);
+  /* XXX: node->label represents end of the statement */
+  add_label(node);
   analyze_expr(node->init, env);
   analyze_expr(node->cond, env);
   add_label(node->cond);
   analyze_expr(node->incdec, env);
   analyze_comp_stmt(node->then, env);
-  /* XXX: node->label represents end of the statement */
-  add_label(node);
+  vector_pop(controls);
 }
 
 static void analyze_goto(Node *node, Env *env) {
@@ -144,6 +151,14 @@ static void analyze_label(Node *node, Env *env) {
       return;
   }
   error("internal error");
+}
+
+static void analyze_break(Node *node, Env *env) {
+  if (node->type != AST_BREAK)
+    error("internal error");
+
+  Node *ctrl = vector_get(controls, vector_size(controls) - 1);
+  node->dest = ctrl->label;
 }
 
 static void analyze_decl(Node *node, Env *env) {
@@ -293,6 +308,7 @@ static void analyze_expr(Node *node, Env *env) {
     case AST_FOR:       analyze_for(node, env);       break;
     case AST_GOTO:      analyze_goto(node, env);      break;
     case AST_LABEL:     analyze_label(node, env);     break;
+    case AST_BREAK:     analyze_break(node, env);     break;
     case AST_DECL:      analyze_decl(node, env);      break;
     case AST_ADDR:      analyze_addr(node, env);      break;
     case AST_DEREF:     analyze_deref(node, env);     break;
@@ -345,17 +361,17 @@ static void analyze_func(Node *node, Env *env) {
 }
 
 void analyze_toplevel(Vector *toplevels) {
+  controls = vector_new();
   for (int i = 0; i < vector_size(toplevels); i++) {
     Node *node = vector_get(toplevels, i);
-    node->env = malloc(sizeof(Env));
-    node->env->lvars = map_new();
-    node->env->labels = map_new();
+    if (node->type == AST_FUNC) {
+      node->env = malloc(sizeof(Env));
+      node->env->lvars = map_new();
+      node->env->labels = map_new();
 
-    scan_label(node, node->env);
-
-    if (node->type == AST_FUNC)
+      scan_label(node, node->env);
       analyze_func(node, node->env);
-    else
+    } else
       error("internal error");
 
     Vector *keys = map_keys(node->env->lvars);
