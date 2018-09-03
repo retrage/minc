@@ -26,6 +26,18 @@ void vector_push(Vector *vec, void *item) {
   vec->vec_len++;
 }
 
+void *vector_pop(Vector *vec) {
+  if (!vec->vec_len)
+    error("vector is empty");
+
+  void *res = vec->buf[vec->vec_len - 1];
+
+  vec->buf[vec->vec_len - 1] = NULL;
+  vec->vec_len--;
+
+  return res;
+}
+
 void *vector_get(Vector *vec, size_t idx) {
   if (idx > vec->vec_len)
     error("idx is too big");

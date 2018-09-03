@@ -22,6 +22,14 @@ int test_vector(void) {
              "the quick brown fox jumps over the lazy dog"))
     return 5;
 
+  char *string3 = (char *)vector_pop(vec);
+  if (strcmp(string3, string2))
+    return 6;
+
+  char *string4 = (char *)vector_pop(vec);
+  if (strcmp(string4, string1))
+    return 7;
+
   return 0;
 }
 

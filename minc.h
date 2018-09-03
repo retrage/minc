@@ -182,6 +182,7 @@ char *format(char *, ...);
 /* vector.c */
 Vector *vector_new(void);
 void vector_push(Vector *, void *);
+void *vector_pop(Vector *);
 void *vector_get(Vector *, size_t);
 size_t vector_size(Vector *);
 
