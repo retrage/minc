@@ -173,7 +173,7 @@ typedef struct Node {
 } Node;
 
 char *source;
-Token tokens[2048];
+Token *tokens;
 
 /* buffer.c */
 Buffer *buffer_new(void);
@@ -208,7 +208,6 @@ char *node2s(Node *);
 void tokenize(void);
 
 /* parse.c */
-void parse_init(void);
 Vector *parse_toplevel(void);
 
 /* analyze.c */

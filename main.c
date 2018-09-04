@@ -1,11 +1,6 @@
 #include "minc.h"
 
-static void init(void) {
-  parse_init();
-}
-
 int main(int argc, char *argv[]) {
-  init();
   tokenize();
 
   Vector *toplevels = parse_toplevel();

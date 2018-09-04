@@ -1,9 +1,10 @@
 #include "minc.h"
 
-int src_pos;
-int token_pos;
+static int src_pos;
+static int token_len;
+static int token_pos;
 
-void read_src(void) {
+static void read_src(void) {
   size_t i = 0;
   size_t src_len = 128;
   source = malloc(sizeof(char) * src_len);
@@ -26,6 +27,12 @@ void read_src(void) {
 }
 
 static void next(void) {
+  if (token_pos >= token_len) {
+    token_len *= 2;
+    tokens = realloc(tokens, token_len);
+    if (!tokens)
+      error("realloc failed");
+  }
   token_pos++;
 }
 
@@ -245,6 +252,8 @@ static void read_symbol(void) {
 }
 
 static void tokenize_init(void) {
+  token_len = 128;
+  tokens = malloc(sizeof(Token) * token_len);
   src_pos = -1;
   token_pos = 0;
 }

@@ -816,11 +816,8 @@ end_read_args:
   return node;
 }
 
-void parse_init(void) {
-  token = tokens - 1;
-}
-
 Vector *parse_toplevel(void) {
+  token = tokens - 1;
   Vector *toplevels = vector_new();
   while ((token + 1)->type != TEOF)
     vector_push(toplevels, read_func());
