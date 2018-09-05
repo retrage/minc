@@ -164,6 +164,8 @@ runtest "int main() { int a; a = 0; do { a += 1; } while (a < 10); return a; }" 
 runtest "int main() { int b = 0; for (int a = 0; a < 50; a += 1) { b += 2; if (a > 13) break; } return b; }" 30
 runtest "int main() { int a = 0; for (int i = 0; i < 5; i += 1) { for (int j = 0; j < 5; j += 1) { a += 1; if (a > 15) break; } } return a; }" 17
 runtest "int main() { int a = 0; for (int i = 0; i < 5; i += 1) { for (int j = 0; j < 5; j += 1) { a += 1; if (a > 15) break; } a += 2; } return a; }" 24
+runtest "int main() { int a = 0; while (a < 10) { a += 1; continue; } return a; }" 10
+runtest "int main() { int a = 0; for (int i = 0; i < 10; i += 1) { for (int j = 0; j < 10; j += 1) { a += 1; if (a < 5) continue; a += 2; } if (a < 10) continue; a += 3; } return a; }" 66
 
 # step 6
 

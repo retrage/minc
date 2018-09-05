@@ -14,6 +14,7 @@ static Node *read_for(void);
 static Node *read_goto(void);
 static Node *read_label(void);
 static Node *read_break(void);
+static Node *read_continue(void);
 static Node *read_decl(void);
 static Node *read_ident(void);
 static Node *read_term(void);
@@ -323,6 +324,19 @@ static Node *read_break(void) {
   token = next();
   Node *node = malloc(sizeof(Node));
   node->type = AST_BREAK;
+
+  return node;
+}
+
+static Node *read_continue(void) {
+  if ((token + 1)->id != KCONTINUE) {
+    error("continue expected");
+    return NULL;
+  }
+
+  token = next();
+  Node *node = malloc(sizeof(Node));
+  node->type = AST_CONTINUE;
 
   return node;
 }
@@ -739,6 +753,8 @@ static Node *read_expr(void) {
     return read_goto();
   } else if ((token + 1)->id == KBREAK) {
     return read_break();
+  } else if ((token + 1)->id == KCONTINUE) {
+    return read_continue();
   } else if ((token + 1)->id == KINT) {
     return read_decl();
   } else {

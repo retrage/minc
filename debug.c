@@ -144,6 +144,8 @@ char *node2s(Node *node) {
       return format("(label %s)", node->label);
     case AST_BREAK:
       return format("(break)");
+    case AST_CONTINUE:
+      return format("(continue)");
     case AST_DECL:
       return format("(decl declvar=%s)", node2s(node->declvar));
     case AST_ADDR:

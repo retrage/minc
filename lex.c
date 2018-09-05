@@ -119,6 +119,9 @@ static void read_string(void) {
         } else if (!strcmp(string, "break")) {
           tokens[token_pos].type = TKEYWORD;
           tokens[token_pos].id = KBREAK;
+        } else if (!strcmp(string, "continue")) {
+          tokens[token_pos].type = TKEYWORD;
+          tokens[token_pos].id = KCONTINUE;
         } else if (!strcmp(string, "int")) {
           tokens[token_pos].type = TKEYWORD;
           tokens[token_pos].id = KINT;

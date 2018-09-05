@@ -11,6 +11,7 @@ static void emit_for(Node *);
 static void emit_goto(Node *);
 static void emit_label(Node *);
 static void emit_break(Node *);
+static void emit_continue(Node *);
 static void emit_decl(Node *);
 static void emit_addr(Node *);
 static void emit_deref(Node *);
@@ -76,6 +77,8 @@ static void emit_do_while(Node *node) {
 
   emit_expr(node->then);
 
+  printf("%s:\n", node->cond->label);
+
   emit_expr(node->cond);
 
   printf("\tcmp $0, %%rax\n");
@@ -100,6 +103,9 @@ static void emit_for(Node *node) {
   printf("\tje %s\n", node->label);
 
   emit_expr(node->then);
+
+  printf("%s:\n", node->incdec->label);
+
   emit_expr(node->incdec);
 
   printf("\tjmp %s\n", node->cond->label);
@@ -123,6 +129,13 @@ static void emit_label(Node *node) {
 
 static void emit_break(Node *node) {
   if (node->type != AST_BREAK)
+    error("internal error");
+
+  printf("\tjmp %s\n", node->dest);
+}
+
+static void emit_continue(Node *node) {
+  if (node->type != AST_CONTINUE)
     error("internal error");
 
   printf("\tjmp %s\n", node->dest);
@@ -401,6 +414,7 @@ static void emit_expr(Node *node) {
     case AST_GOTO:      emit_goto(node);      break;
     case AST_LABEL:     emit_label(node);     break;
     case AST_BREAK:     emit_break(node);     break;
+    case AST_CONTINUE:  emit_continue(node);  break;
     case AST_DECL:      emit_decl(node);      break;
     case AST_ADDR:
     case AST_DEREF:

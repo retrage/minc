@@ -9,6 +9,7 @@ static void analyze_for(Node *, Env *);
 static void analyze_goto(Node *, Env *);
 static void analyze_label(Node *, Env *);
 static void analyze_break(Node *, Env *);
+static void analyze_continue(Node *, Env *);
 static void analyze_decl(Node *, Env *);
 static void analyze_addr(Node *, Env *);
 static void analyze_deref(Node *, Env *);
@@ -77,10 +78,10 @@ static void analyze_if(Node *node, Env *env) {
   /* XXX: node->label represents end of the statement */
   add_label(node);
   analyze_expr(node->cond, env);
-  analyze_comp_stmt(node->then, env);
   add_label(node->then);
-  analyze_comp_stmt(node->els, env);
+  analyze_comp_stmt(node->then, env);
   add_label(node->els);
+  analyze_comp_stmt(node->els, env);
 }
 
 static void analyze_while(Node *node, Env *env) {
@@ -90,8 +91,8 @@ static void analyze_while(Node *node, Env *env) {
   vector_push(controls, node);
   /* XXX: node->label represents end of the statement */
   add_label(node);
-  analyze_expr(node->cond, env);
   add_label(node->cond);
+  analyze_expr(node->cond, env);
   analyze_comp_stmt(node->then, env);
   vector_pop(controls);
 }
@@ -103,8 +104,9 @@ static void analyze_do_while(Node *node, Env *env) {
   vector_push(controls, node);
   /* XXX: node->label represents end of the statement */
   add_label(node);
-  analyze_comp_stmt(node->then, env);
   add_label(node->then);
+  analyze_comp_stmt(node->then, env);
+  add_label(node->cond);
   analyze_expr(node->cond, env);
   vector_pop(controls);
 }
@@ -117,8 +119,9 @@ static void analyze_for(Node *node, Env *env) {
   /* XXX: node->label represents end of the statement */
   add_label(node);
   analyze_expr(node->init, env);
-  analyze_expr(node->cond, env);
   add_label(node->cond);
+  analyze_expr(node->cond, env);
+  add_label(node->incdec);
   analyze_expr(node->incdec, env);
   analyze_comp_stmt(node->then, env);
   vector_pop(controls);
@@ -160,6 +163,17 @@ static void analyze_break(Node *node, Env *env) {
 
   Node *ctrl = vector_get(controls, vector_size(controls) - 1);
   node->dest = ctrl->label;
+}
+
+static void analyze_continue(Node *node, Env *env) {
+  if (node->type != AST_CONTINUE)
+    error("internal error");
+
+  Node *ctrl = vector_get(controls, vector_size(controls) - 1);
+  if (ctrl->type == AST_FOR)
+    node->dest = ctrl->incdec->label;
+  else
+    node->dest = ctrl->cond->label;
 }
 
 static void analyze_decl(Node *node, Env *env) {

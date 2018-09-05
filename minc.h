@@ -45,6 +45,7 @@ enum {
   KFOR,
   KGOTO,
   KBREAK,
+  KCONTINUE,
   KINT,
 };
 
@@ -70,6 +71,7 @@ enum {
   AST_GOTO,
   AST_LABEL,
   AST_BREAK,
+  AST_CONTINUE,
   AST_DECL,
   AST_ADDR,
   AST_DEREF,
@@ -165,7 +167,7 @@ typedef struct Node {
       struct Node *then;
       struct Node *els;
     };
-    /* Goto, Break */
+    /* Goto, Break, Continue */
     char *dest;
     /* Declaration */
     struct {
