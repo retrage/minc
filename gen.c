@@ -243,6 +243,12 @@ static void emit_unary(Node *node) {
   emit_expr(node->operand);
 
   switch (node->type) {
+    case AST_ADDR:
+      emit_addr(node);
+      break;
+    case AST_DEREF:
+      emit_deref(node);
+      break;
     case AST_POS:
       /* do nothing */
       break;
@@ -392,8 +398,8 @@ static void emit_expr(Node *node) {
     case AST_LABEL:     emit_label(node);     break;
     case AST_BREAK:     emit_break(node);     break;
     case AST_DECL:      emit_decl(node);      break;
-    case AST_ADDR:      emit_addr(node);      break;
-    case AST_DEREF:     emit_deref(node);     break;
+    case AST_ADDR:
+    case AST_DEREF:
     case AST_POS:
     case AST_NEG:
     case AST_COMP:
