@@ -14,6 +14,7 @@ static void analyze_addr(Node *, Env *);
 static void analyze_deref(Node *, Env *);
 static void analyze_literal(Node *, Env *);
 static void analyze_lvar(Node *, Env *);
+static void analyze_unary(Node *, Env *);
 static void analyze_op(Node *, Env *);
 static void analyze_expr(Node *, Env *);
 static void analyze_comp_stmt(Node *, Env *);
@@ -218,6 +219,8 @@ static void analyze_addr(Node *node, Env *env) {
     expr->ty = ty;
   else
     error("%s undeclared", expr->var_name);
+
+  analyze_expr(node->operand, env);
 }
 
 static void analyze_deref(Node *node, Env *env) {
@@ -231,6 +234,8 @@ static void analyze_deref(Node *node, Env *env) {
     expr->ty = ty;
   else
     error("%s undeclared", expr->var_name);
+
+  analyze_expr(node->operand, env);
 }
 
 static void analyze_literal(Node *node, Env *env) {
@@ -255,6 +260,27 @@ static void analyze_return(Node *node, Env *env) {
 
   analyze_expr(node->retval, env);
   node->retlabel = retlabel;
+}
+
+static void analyze_unary(Node *node, Env *env) {
+  switch (node->type) {
+    case AST_ADDR:
+      analyze_addr(node, env);
+      break;
+    case AST_DEREF:
+      analyze_deref(node, env);
+      break;
+    case AST_POS:
+    case AST_NEG:
+    case AST_COMP:
+    case AST_LOG_NEG:
+    case AST_PRE_INC:
+    case AST_PRE_DEC:
+      analyze_expr(node->operand, env);
+      break;
+    default:
+      error("internal error");
+  }
 }
 
 static void analyze_op(Node *node, Env *env) {
@@ -313,9 +339,16 @@ static void analyze_expr(Node *node, Env *env) {
     case AST_GOTO:      analyze_goto(node, env);      break;
     case AST_LABEL:     analyze_label(node, env);     break;
     case AST_BREAK:     analyze_break(node, env);     break;
+    case AST_CONTINUE:  analyze_continue(node, env);  break;
     case AST_DECL:      analyze_decl(node, env);      break;
-    case AST_ADDR:      analyze_addr(node, env);      break;
-    case AST_DEREF:     analyze_deref(node, env);     break;
+    case AST_ADDR:
+    case AST_DEREF:
+    case AST_POS:
+    case AST_NEG:
+    case AST_COMP:
+    case AST_LOG_NEG:
+    case AST_PRE_INC:
+    case AST_PRE_DEC:   analyze_unary(node, env);     break;
     default:            analyze_op(node, env);
   }
 }

@@ -386,16 +386,44 @@ static Node *read_unary(void) {
 
   if (tokscmp((token + 1), "&")) {
     token = next();
-
     node = malloc(sizeof(Node));
     node->type = AST_ADDR;
     node->operand = read_expr();
   } else if (tokscmp((token + 1), "*")) {
     token = next();
-
     node = malloc(sizeof(Node));
     node->type = AST_DEREF;
     node->operand =  read_expr();
+  } else if (tokscmp((token + 1), "+")) {
+    token = next();
+    node = malloc(sizeof(Node));
+    node->type = AST_POS;
+    node->operand = read_expr();
+  } else if (tokscmp((token + 1), "-")) {
+    token = next();
+    node = malloc(sizeof(Node));
+    node->type = AST_NEG;
+    node->operand = read_expr();
+  } else if (tokscmp((token + 1), "~")) {
+    token = next();
+    node = malloc(sizeof(Node));
+    node->type = AST_COMP;
+    node->operand = read_expr();
+  } else if (tokscmp((token + 1), "!")) {
+    token = next();
+    node = malloc(sizeof(Node));
+    node->type = AST_LOG_NEG;
+    node->operand = read_expr();
+  } else if (tokscmp((token + 1), "++")) {
+    token = next();
+    node = malloc(sizeof(Node));
+    node->type = AST_PRE_INC;
+    node->operand = read_expr();
+  } else if (tokscmp((token + 1), "--")) {
+    token = next();
+    node = malloc(sizeof(Node));
+    node->type = AST_PRE_DEC;
+    node->operand = read_expr();
   } else
     node = read_term();
 

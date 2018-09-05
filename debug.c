@@ -48,6 +48,20 @@ static char *ty2s(Type *ty) {
   return buffer_body(buf);
 }
 
+static char *unary2s(int type) {
+  switch (type) {
+    case AST_ADDR:    return "addr";
+    case AST_DEREF:   return "deref";
+    case AST_POS:     return "+";
+    case AST_NEG:     return "-";
+    case AST_COMP:    return "~";
+    case AST_LOG_NEG: return "!";
+    case AST_PRE_INC: return "++";
+    case AST_PRE_DEC: return "--";
+    default:          return "UNK";
+  }
+}
+
 static char *op2s(int type) {
   switch (type) {
     case OP_LT:     return "<";
@@ -133,9 +147,14 @@ char *node2s(Node *node) {
     case AST_DECL:
       return format("(decl declvar=%s)", node2s(node->declvar));
     case AST_ADDR:
-      return format("(addr %s)", node2s(node->operand));
     case AST_DEREF:
-      return format("(deref %s)", node2s(node->operand));
+    case AST_POS:
+    case AST_NEG:
+    case AST_COMP:
+    case AST_LOG_NEG:
+    case AST_PRE_INC:
+    case AST_PRE_DEC:
+      return format("(%s %s)", unary2s(node->type), node2s(node->operand));
     case OP_LT:
     case OP_GT:
     case OP_LE:

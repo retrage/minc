@@ -141,7 +141,21 @@ static void read_symbol(void) {
 
   switch (source[src_pos + 1]) {
     case '+':
+      if (source[src_pos + 1] == '+' && source[src_pos + 2] == '+') {
+        tokens[token_pos].type = TPUNCTUATOR;
+        tokens[token_pos].sval = malloc(sizeof(char) * 4);
+        strcpy(tokens[token_pos].sval, "++");
+        src_pos++;
+        break;
+      }
     case '-':
+      if (source[src_pos + 1] == '-' && source[src_pos + 2] == '-') {
+        tokens[token_pos].type = TPUNCTUATOR;
+        tokens[token_pos].sval = malloc(sizeof(char) * 4);
+        strcpy(tokens[token_pos].sval, "--");
+        src_pos++;
+        break;
+      }
     case '*':
     case '/':
     case '%':
@@ -183,6 +197,15 @@ static void read_symbol(void) {
     case '}':
     case '?':
     case ':':
+    case '~':
+    case '!':
+      if (source[src_pos + 1] == '!' && source[src_pos + 2] == '=') {
+        tokens[token_pos].type = TPUNCTUATOR;
+        tokens[token_pos].sval = malloc(sizeof(char) * 4);
+        strcpy(tokens[token_pos].sval, "!=");
+        src_pos++;
+        break;
+      }
       tokens[token_pos].type = TPUNCTUATOR;
       symbol[0] = source[src_pos + 1];
       symbol[1] = '\0';
@@ -197,16 +220,6 @@ static void read_symbol(void) {
         src_pos++;
       } else {
         strcpy(tokens[token_pos].sval, "=");
-      }
-      break;
-    case '!':
-      if (source[src_pos + 2] == '=') {
-        tokens[token_pos].type = TPUNCTUATOR;
-        tokens[token_pos].sval = malloc(sizeof(char) * 4);
-        strcpy(tokens[token_pos].sval, "!=");
-        src_pos++;
-      } else {
-        error("!= expected");
       }
       break;
     case '<':

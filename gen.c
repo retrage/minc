@@ -21,6 +21,7 @@ static void emit_return(Node *);
 static void emit_lvalue(Node *);
 static void emit_rvalue(Node *);
 static void emit_assgin(Node *);
+static void emit_unary(Node *);
 static void emit_op(Node *);
 static void emit_expr(Node *);
 static void emit_comp_stmt(Node *);
@@ -235,6 +236,38 @@ static void emit_assgin(Node *node) {
     printf("\tmov %%edi, (%%rax)\n");
 }
 
+static void emit_unary(Node *node) {
+  if (!node->operand)
+    error("internal error");
+
+  emit_expr(node->operand);
+
+  switch (node->type) {
+    case AST_POS:
+      /* do nothing */
+      break;
+    case AST_NEG:
+      printf("\tneg %%eax\n");
+      break;
+    case AST_COMP:
+      printf("\tnot %%eax\n");
+      break;
+    case AST_LOG_NEG:
+      printf("\tcmpl $0, %%eax\n");
+      printf("\tsete %%al\n");
+      printf("\tmovzbl %%al, %%eax\n");
+      break;
+    case AST_PRE_INC:
+      printf("add $1, %%eax\n");
+      break;
+    case AST_PRE_DEC:
+      printf("sub $1, %%eax\n");
+      break;
+    default:
+      error("internal error");
+  }
+}
+
 static void emit_op(Node *node) {
   emit_expr(node->left);
   printf("\tpush %%rax\n");
@@ -361,6 +394,12 @@ static void emit_expr(Node *node) {
     case AST_DECL:      emit_decl(node);      break;
     case AST_ADDR:      emit_addr(node);      break;
     case AST_DEREF:     emit_deref(node);     break;
+    case AST_POS:
+    case AST_NEG:
+    case AST_COMP:
+    case AST_LOG_NEG:
+    case AST_PRE_INC:
+    case AST_PRE_DEC:   emit_unary(node);     break;
     case OP_LT:
     case OP_GT:
     case OP_LE:

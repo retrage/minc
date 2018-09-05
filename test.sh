@@ -119,6 +119,13 @@ runtest "int main() { int a; a = 8; a >>= 1; return a; }" 4
 runtest "int main() { int a; a = 73; a &= 29; return a; }" 9
 runtest "int main() { int a; a = 73; a ^= 29; return a; }" 84
 runtest "int main() { int a; a = 73; a |= 29; return a; }" 93
+runtest "int main() { int a; a = 10; return +a; }" 10
+runtest "int main() { int a; a = 20; return -a; }" 236
+runtest "int main() { int a; a = 30; return ~a; }" 225
+runtest "int main() { int a; a = 1; return !a; }" 0
+runtest "int main() { int a; a = 0; return !a; }" 1
+runtest "int main() { int a; a = 40; return ++a; }" 41
+runtest "int main() { int a; a = 50; return --a; }" 49
 
 # step 4.1
 calltest "int main() { foo(); return 0; }" "test4-1-1" "OK"
