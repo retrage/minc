@@ -147,6 +147,8 @@ static void emit_addr(Node *node) {
   if (!node->operand->expr)
     error("internal error");
 
+  emit_expr(node->operand);
+
   Node *expr = node->operand->expr;
   int offset = expr->ty->offset;
   printf("\tleaq %d(%%rbp), %%rax\n", -offset);
@@ -161,6 +163,8 @@ static void emit_deref(Node *node) {
 
   if (!node->operand->expr)
     error("internal error");
+
+  emit_expr(node->operand);
 
   Node *expr = node->operand->expr;
   int offset = expr->ty->offset;
