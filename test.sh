@@ -158,6 +158,8 @@ runtest "int main() { int a; int b; b = 0; for (a = 0; a != 10; a = a + 1) { b =
 runtest "int main() { int a; int b; b = 0; for (a = 0; a != 10; a = a + 1) b = b + 2; return b; }" 20
 runtest "int fib(int n) { if (n == 0) { return 1; } if (n == 1) { return 1; } else { return fib(n - 2) + fib(n - 1); } } int main() { return fib(5); }" 8
 runtest "int fib(int n) { if (n == 0) { return 1; } if (n == 1) { return 1; } else { return fib(n - 2) + fib(n - 1); } } int main() { return fib(10); }" 89
+runtest "int fib(int n) { if (n == 0 || n == 1) return 1; else return fib(n - 2) + fib(n - 1); } int main() { return fib(10); }" 89
+runtest "int fib(int n) { if (n == 0) return 1; else if (n == 1) return 1; else return fib(n - 2) + fib(n - 1); } int main() { return fib(10); }" 89
 runtest "int main() { goto a; a: return 0; }" 0
 runtest "int main() { int a; a = 1; if (a > 0) goto g1; else goto g2; g1: return 10; g2: return 20; }" 10
 runtest "int main() { int a; a = 0; do { a += 1; } while (a < 10); return a; }" 10
