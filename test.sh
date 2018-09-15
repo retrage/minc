@@ -174,4 +174,10 @@ runtest "int main() { int a = 0; for (int i = 0; i < 10; i += 1) { for (int j = 
 # step 7
 runtest "int main() { int x; x = 3; int *y; y = &x; return *y; }" 3
 
+# step 8
+calltest "int main() { int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 2; print_int(*q); return 0; }" "test8-1" "4"
+calltest "int main() { int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 3; print_int(*q); return 0; }" "test8-1" "8"
+calltest "int main() { int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 2; q = q - 1; print_int(*q); return 0; }" "test8-1" "2"
+calltest "int main() { int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 3; q = q - 2; print_int(*q); return 0; }" "test8-1" "2"
+
 echo OK

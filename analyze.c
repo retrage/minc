@@ -58,6 +58,76 @@ static void scan_label(Node *node, Env *env) {
   }
 }
 
+static int is_type(Node *node, int ty) {
+  switch (node->type) {
+    case AST_FUNC_CALL:
+      /* FIXME: check the return value of the function call */
+      if (ty == TYINT)
+        return 1;
+      else
+        return 0;
+      break;
+    case AST_EXPR:
+      return is_type(node->expr, ty);
+      break;
+    case AST_LITERAL:
+      /* FIXME: check the type of literal */
+      if (ty == TYINT)
+        return 1;
+      else
+        return 0;
+      break;
+    case AST_LVAR:
+      if (node->ty->ty == ty)
+        return 1;
+      else
+        return 0;
+      break;
+    case OP_LT:
+    case OP_GT:
+    case OP_LE:
+    case OP_GE:
+    case OP_EQ:
+    case OP_NEQ:
+    case OP_AND:
+    case OP_XOR:
+    case OP_OR:
+    case OP_LOG_AND:
+    case OP_LOG_OR:
+      /*FIXME: it assume return value integer */
+      if (ty == TYINT)
+        return 1;
+      else
+        return 0;
+      break;
+    case OP_ADD:
+    case OP_SUB:
+      if (is_type(node->left, TYINT) && is_type(node->right, TYPTR)) {
+        if (ty == TYPTR)
+          return 1;
+        else
+          return 0;
+      } else if (is_type(node->left, TYPTR) && is_type(node->right, TYINT)) {
+        if (ty == TYPTR)
+          return 1;
+        else
+          return 0;
+      }
+    case OP_MUL:
+    case OP_DIV:
+    case OP_REM:
+    case OP_SHL:
+    case OP_SHR:
+      if (is_type(node->left, ty) && is_type(node->right, ty))
+        return 1;
+      else
+        return 0;
+      break;
+    default:
+      return 0;
+  }
+}
+
 static void analyze_func_call(Node *node, Env *env) {
   if (node->type != AST_FUNC_CALL)
     error("internal error");
@@ -305,6 +375,11 @@ static void analyze_op(Node *node, Env *env) {
         error("lvalue must be variable");
       analyze_expr(node->left, env);
       analyze_expr(node->right, env);
+      if (is_type(node->right, TYPTR)) {
+        node->operand_ty = malloc(sizeof(Type));
+        node->operand_ty->ty = TYPTR;
+        node->operand_ty->size = 8;
+      }
       break;
     case OP_LT:
     case OP_GT:
@@ -324,14 +399,22 @@ static void analyze_op(Node *node, Env *env) {
     case OP_REM:
     case OP_SHL:
     case OP_SHR:
+      analyze_expr(node->left, env);
+      analyze_expr(node->right, env);
+      if (node->type == OP_ADD || node->type == OP_SUB) {
+        /* FIXME: only TYINT {+,-} TYPTR is allowed */
+        if (is_type(node->left, TYPTR) && is_type(node->right, TYINT)) {
+          node->operand_ty = malloc(sizeof(Type));
+          node->operand_ty->ty = TYPTR;
+          node->operand_ty->size = 8;
+        }
+      }
       if (node->type == OP_LOG_AND || node->type == OP_LOG_OR) {
         node->label_false = format(".L%d", ++label_idx);
         node->label_true = format(".L%d", ++label_idx);
         /* XXX: node->label represents end of the op */
         add_label(node);
       }
-      analyze_expr(node->left, env);
-      analyze_expr(node->right, env);
       break;
     default:
       error("internal error %s", node2s(node));

@@ -249,8 +249,12 @@ static void emit_assgin(Node *node) {
   /* FIXME: analyze the type of right operand */
   if (node->right->type == AST_ADDR)
     printf("\tmov %%rdi, (%%rax)\n");
-  else
-    printf("\tmov %%edi, (%%rax)\n");
+  else {
+    if (node->operand_ty && node->operand_ty->ty == TYPTR)
+      printf("\tmov %%rdi, (%%rax)\n");
+    else
+      printf("\tmov %%edi, (%%rax)\n");
+  }
 }
 
 static void emit_unary(Node *node) {
@@ -364,10 +368,31 @@ static void emit_op(Node *node) {
       printf("%s:\n", node->label);
       break;
     case OP_ADD:
-      printf("\taddl %%edi, %%eax\n");
+      if (node->operand_ty) {
+        printf("\tpush %%rax\n");
+        printf("\tmov %%rdi, %%rax\n");
+        /* FIXME: compute size of type */
+        printf("\tmovl $%d, %%edi\n", 4);
+        printf("\tmul %%edi\n");
+        printf("\tpop %%rdi\n");
+        printf("\tadd %%rdi, %%rax\n");
+      } else
+        printf("\taddl %%edi, %%eax\n");
       break;
     case OP_SUB:
-      printf("\tsubl %%edi, %%eax\n");
+      if (node->operand_ty) {
+        printf("\tpush %%rax\n");
+        printf("\tmov %%rdi, %%rax\n");
+        /* FIXME: compute size of type */
+        printf("\tmovl $%d, %%edi\n", 4);
+        printf("\tmul %%edi\n");
+        printf("\tpush %%rax\n");
+        printf("\tmov %%rdi, %%rax\n");
+        printf("\tpop %%rdi\n");
+        printf("\tpop %%rax\n");
+        printf("\tsub %%rdi, %%rax\n");
+      } else
+        printf("\tsubl %%edi, %%eax\n");
       break;
     case OP_MUL:
       printf("\tmul %%edi\n");

@@ -139,6 +139,8 @@ typedef struct Node {
     struct {
       struct Node *left;
       struct Node *right;
+      /* Pointer Add, Sub */
+      Type *operand_ty;
       /* Log and, Log or */
       char *label_false;
       char *label_true;
